@@ -53,46 +53,9 @@ services:
       start_period: 60s
     restart: unless-stopped
 
-  # ──────────────────────────────────────────────────────────
-  # API — Express 5 + Socket.io backend
-  # ──────────────────────────────────────────────────────────
-  api:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile
-      target: development
-    container_name: venueflow-api
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./apps/api:/app
-      - ./packages:/packages
-      - /app/node_modules
-    environment:
-      NODE_ENV: development
-      PORT: 3001
-      REDIS_URL: redis://redis:6379
-      FIREBASE_PROJECT_ID: demo-venueflow
-      FIRESTORE_EMULATOR_HOST: firebase-emulator:8080
-      FIREBASE_AUTH_EMULATOR_HOST: firebase-emulator:9099
-      PUBSUB_EMULATOR_HOST: firebase-emulator:8085
-      PUBSUB_PROJECT_ID: demo-venueflow
-      CORS_ORIGINS: "http://localhost:3000"
-      RATE_LIMIT_WINDOW_MS: "60000"
-      RATE_LIMIT_PUBLIC_MAX: "100"
-      RATE_LIMIT_WRITE_MAX: "20"
-    depends_on:
-      redis:
-        condition: service_healthy
-      firebase-emulator:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
+  # NOTE: The API runs natively via `npm run dev` (Turborepo).
+  # Docker build is skipped because the Dockerfile needs the monorepo root
+  # (turbo.json, package-lock.json) which is outside the build context.
 
 volumes:
   redis_data:

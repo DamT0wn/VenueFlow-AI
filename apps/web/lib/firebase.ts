@@ -17,27 +17,28 @@ import type { Messaging } from 'firebase/messaging';
 // ──────────────────────────────────────────────────────────────────────────────
 
 const USE_EMULATOR = process.env['NEXT_PUBLIC_USE_EMULATOR'] === 'true';
-
 const measurementId = process.env['NEXT_PUBLIC_GA_MEASUREMENT_ID'];
 
 const firebaseConfig = {
-  apiKey:            process.env['NEXT_PUBLIC_FIREBASE_API_KEY'] ?? 'demo-key',
+  apiKey:            process.env['NEXT_PUBLIC_FIREBASE_API_KEY'] ?? 'demo-api-key-for-emulator',
   authDomain:        process.env['NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'] ?? 'demo-venueflow.firebaseapp.com',
   projectId:         process.env['NEXT_PUBLIC_FIREBASE_PROJECT_ID'] ?? 'demo-venueflow',
   storageBucket:     process.env['NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'] ?? '',
   messagingSenderId: process.env['NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'] ?? '000000000000',
-  appId:             process.env['NEXT_PUBLIC_FIREBASE_APP_ID'] ?? '1:000000000000:web:demo',
+  appId:             process.env['NEXT_PUBLIC_FIREBASE_APP_ID'] ?? '1:000000000000:web:demo000000000000',
   ...(measurementId ? { measurementId } : {}),
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Singleton app
+// Singleton state — separate flags per service to avoid the bug where one
+// service's flag blocks another service from connecting to the emulator.
 // ──────────────────────────────────────────────────────────────────────────────
 
 let _app: FirebaseApp | null = null;
 let _auth: Auth | null = null;
 let _firestore: Firestore | null = null;
-let _emulatorsConnected = false;
+let _authEmulatorConnected = false;
+let _firestoreEmulatorConnected = false;
 
 function getFirebaseApp(): FirebaseApp {
   if (_app) return _app;
@@ -51,11 +52,12 @@ function getFirebaseAuth(): Auth {
   if (_auth) return _auth;
   _auth = getAuth(getFirebaseApp());
 
-  if (typeof window !== 'undefined' && USE_EMULATOR && !_emulatorsConnected) {
+  if (typeof window !== 'undefined' && USE_EMULATOR && !_authEmulatorConnected) {
+    _authEmulatorConnected = true; // set before calling to prevent double-connect on hot reload
     try {
-      connectAuthEmulator(_auth, 'http://localhost:9099', { disableWarnings: true });
+      connectAuthEmulator(_auth, 'http://127.0.0.1:9099', { disableWarnings: true });
     } catch {
-      // Already connected in hot-reload
+      // Already connected — safe to ignore
     }
   }
 
@@ -68,29 +70,52 @@ function getFirebaseFirestore(): Firestore {
   if (_firestore) return _firestore;
   _firestore = getFirestore(getFirebaseApp());
 
-  if (typeof window !== 'undefined' && USE_EMULATOR && !_emulatorsConnected) {
+  if (typeof window !== 'undefined' && USE_EMULATOR && !_firestoreEmulatorConnected) {
+    _firestoreEmulatorConnected = true;
     try {
-      connectFirestoreEmulator(_firestore, 'localhost', 8080);
+      connectFirestoreEmulator(_firestore, '127.0.0.1', 8080);
     } catch {
-      // Already connected in hot-reload
+      // Already connected — safe to ignore
     }
-    _emulatorsConnected = true;
   }
 
   return _firestore;
 }
 
-// ── Public singletons ─────────────────────────────────────────────────────────
+// ── Public accessors (always call as functions on the client) ─────────────────
 
-/** Firebase Auth singleton (lazy, emulator-aware). */
-export const firebaseAuth = typeof window !== 'undefined'
-  ? getFirebaseAuth()
-  : (null as unknown as Auth);          // SSR: auth is client-only
+/**
+ * Returns the Firebase Auth instance.
+ * Always call this as a function — never cache the return value at module level.
+ * Returns null in SSR environments.
+ */
+export function getClientAuth(): Auth | null {
+  if (typeof window === 'undefined') return null;
+  return getFirebaseAuth();
+}
 
-/** Firestore singleton (lazy, emulator-aware). */
-export const firestore = typeof window !== 'undefined'
-  ? getFirebaseFirestore()
-  : (null as unknown as Firestore);     // SSR: Firestore is client-only
+/**
+ * Returns the Firestore instance.
+ * Returns null in SSR environments.
+ */
+export function getClientFirestore(): Firestore | null {
+  if (typeof window === 'undefined') return null;
+  return getFirebaseFirestore();
+}
+
+/**
+ * @deprecated Use getClientAuth() instead.
+ * Kept for backward compatibility — returns null on SSR, Auth on client.
+ */
+export const firebaseAuth: Auth | null =
+  typeof window !== 'undefined' ? getFirebaseAuth() : null;
+
+/**
+ * @deprecated Use getClientFirestore() instead.
+ * Kept for backward compatibility — returns null on SSR, Firestore on client.
+ */
+export const firestore: Firestore | null =
+  typeof window !== 'undefined' ? getFirebaseFirestore() : null;
 
 export { getFirebaseApp as firebaseApp };
 

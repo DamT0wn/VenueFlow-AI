@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/app.js",
   "scripts": {
-    "dev": "tsx watch src/app.ts",
+    "dev": "tsx watch --env-file=.env src/app.ts",
     "build": "tsc --project tsconfig.json",
     "start": "node dist/app.js",
     "lint": "eslint src --ext .ts",

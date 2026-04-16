@@ -3,17 +3,18 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  signInWithPopup,
   GoogleAuthProvider,
   signInAnonymously,
   signInWithEmailAndPassword,
+  signInWithRedirect,
+  createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Loader2, LogIn, Zap } from 'lucide-react';
-import { firebaseAuth } from '../../../lib/firebase';
+import { Loader2, LogIn, Zap, FlaskConical } from 'lucide-react';
+import { getClientAuth } from '../../../lib/firebase';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Form schema
@@ -27,7 +28,7 @@ const EmailLoginSchema = z.object({
 type EmailLoginValues = z.infer<typeof EmailLoginSchema>;
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Design tokens as CSS values (resolved from globals.css vars where needed)
+// Design tokens
 // ──────────────────────────────────────────────────────────────────────────────
 
 const css = {
@@ -40,7 +41,12 @@ const css = {
   muted:     'text-[#6B7280]',
   accent:    '#6366F1',
   danger:    '#EF4444',
+  success:   '#22C55E',
 };
+
+const USE_EMULATOR = process.env['NEXT_PUBLIC_USE_EMULATOR'] === 'true';
+const DEV_EMAIL    = 'dev@venueflow.local';
+const DEV_PASSWORD = 'devpass123';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Login Page
@@ -52,7 +58,7 @@ export default function LoginPage() {
   const callbackUrl = searchParams.get('callbackUrl') ?? '/map';
   const shouldReduceMotion = useReducedMotion();
 
-  const [isLoading, setIsLoading] = useState<'google' | 'email' | 'anon' | null>(null);
+  const [isLoading, setIsLoading] = useState<'google' | 'email' | 'anon' | 'dev' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {
@@ -61,50 +67,152 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<EmailLoginValues>({ resolver: zodResolver(EmailLoginSchema) });
 
-  const onSuccess = (): void => {
-    router.replace(callbackUrl);
+  /**
+   * Writes the session cookie immediately after sign-in, then navigates.
+   *
+   * We must write the cookie BEFORE calling router.replace() so the middleware
+   * sees it on the very first request to the destination page.
+   * We poll `currentUser` briefly to handle the async emulator sign-in delay.
+   */
+  const onSuccess = async (destination = callbackUrl): Promise<void> => {
+    const auth = getClientAuth();
+    if (!auth) {
+      router.replace(destination);
+      return;
+    }
+
+    // The emulator can take a tick to populate currentUser after signIn resolves.
+    // Wait up to 500 ms for the user object to appear.
+    let attempts = 0;
+    while (!auth.currentUser && attempts < 10) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 50));
+      attempts++;
+    }
+
+    if (auth.currentUser) {
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const claims = await auth.currentUser.getIdTokenResult();
+        const role = claims.claims['role'] as string | undefined;
+        // SameSite=Lax so the cookie survives redirect-based flows
+        document.cookie = `__session=${token}; path=/; SameSite=Lax; max-age=3600`;
+        document.cookie = `__role=${role ?? 'user'}; path=/; SameSite=Lax; max-age=3600`;
+      } catch {
+        // Non-fatal — the AuthProvider will sync on the next tick
+      }
+    }
+
+    router.replace(destination);
   };
 
+  // ── Google — uses redirect to avoid emulator popup/ERR_EMPTY_RESPONSE bug ───
   const handleGoogleSignIn = async (): Promise<void> => {
     setIsLoading('google');
     setErrorMessage(null);
     try {
+      const auth = getClientAuth();
       const provider = new GoogleAuthProvider();
-      if (!firebaseAuth) throw new Error('Firebase not initialised');
-      await signInWithPopup(firebaseAuth, provider);
-      onSuccess();
+      if (!auth) throw new Error('Firebase not initialised');
+      await signInWithRedirect(auth, provider);
+      // Page navigates away; result handled by getRedirectResult in providers
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Google sign-in failed';
-      setErrorMessage(msg.includes('config') ? 'Firebase is not configured. Add Firebase credentials to .env.local.' : 'Google sign-in failed. Please try again.');
-    } finally {
+      setErrorMessage(
+        msg.includes('config') || msg.includes('api-key')
+          ? 'Firebase is not configured. Add credentials to apps/web/.env.local'
+          : `Google sign-in failed: ${msg}`,
+      );
       setIsLoading(null);
     }
   };
 
+  // ── Email / Password — auto-creates account in emulator mode ────────────────
   const handleEmailSignIn = async (values: EmailLoginValues): Promise<void> => {
     setIsLoading('email');
     setErrorMessage(null);
     try {
-      if (!firebaseAuth) throw new Error('Firebase not initialised');
-      await signInWithEmailAndPassword(firebaseAuth, values.email, values.password);
-      onSuccess();
-    } catch {
-      setErrorMessage('Invalid email or password.');
+      const auth = getClientAuth();
+      if (!auth) throw new Error('Firebase not initialised');
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      await onSuccess();
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code;
+      if (USE_EMULATOR && (code === 'auth/user-not-found' || code === 'auth/invalid-credential')) {
+        try {
+          const auth = getClientAuth();
+          if (!auth) throw new Error('Firebase not initialised');
+          await createUserWithEmailAndPassword(auth, values.email, values.password);
+          await onSuccess();
+          return;
+        } catch {
+          /* fall through */
+        }
+      }
+      setErrorMessage('Invalid email or password. In emulator mode entering a new email will auto-create an account.');
     } finally {
       setIsLoading(null);
     }
   };
 
+  // ── Anonymous ────────────────────────────────────────────────────────────────
   const handleAnonymousSignIn = async (): Promise<void> => {
     setIsLoading('anon');
     setErrorMessage(null);
     try {
-      if (!firebaseAuth) throw new Error('Firebase not initialised');
-      await signInAnonymously(firebaseAuth);
-      onSuccess();
+      const auth = getClientAuth();
+      if (!auth) throw new Error('Firebase not initialised');
+      await signInAnonymously(auth);
+      await onSuccess();
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';
-      setErrorMessage(msg.includes('emulator') || msg.includes('network') ? 'Firebase emulator not running. Start it with: firebase emulators:start' : 'Could not connect. Please check your network.');
+      setErrorMessage(
+        msg.includes('emulator') || msg.includes('network') || msg.includes('fetch')
+          ? 'Firebase emulator not reachable at :9099. Check: docker compose ps'
+          : `Anonymous sign-in failed: ${msg}`,
+      );
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  // ── Dev Quick Login — bypasses OAuth entirely using Firebase SDK ─────────────
+  const handleDevLogin = async (): Promise<void> => {
+    setIsLoading('dev');
+    setErrorMessage(null);
+    try {
+      const auth = getClientAuth();
+      if (!auth) throw new Error('Firebase not initialised');
+
+      // 1. Try sign-in with existing dev account
+      try {
+        await signInWithEmailAndPassword(auth, DEV_EMAIL, DEV_PASSWORD);
+        await onSuccess();
+        return;
+      } catch {
+        /* user doesn't exist yet — create it */
+      }
+
+      // 2. Create a new dev account via the Firebase SDK
+      try {
+        await createUserWithEmailAndPassword(auth, DEV_EMAIL, DEV_PASSWORD);
+        await onSuccess();
+        return;
+      } catch (createErr: unknown) {
+        // If email already exists with different password, fall back to anonymous
+        const code = (createErr as { code?: string }).code;
+        if (code === 'auth/email-already-in-use') {
+          setErrorMessage('Dev account exists but wrong password. Check Firebase Emulator UI at http://localhost:4000/auth');
+          return;
+        }
+        throw createErr;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setErrorMessage(
+        msg.includes('fetch') || msg.includes('Failed to fetch') || msg.includes('network')
+          ? 'Cannot reach Firebase emulator at :9099. Is Docker running? Run: docker compose up -d'
+          : `Dev login failed: ${msg}`,
+      );
     } finally {
       setIsLoading(null);
     }
@@ -153,8 +261,46 @@ export default function LoginPage() {
             </div>
           )}
 
+          {/* ── Dev Quick Login (only shown in emulator mode) ── */}
+          {USE_EMULATOR && (
+            <>
+              <button
+                id="btn-dev-login"
+                onClick={() => void handleDevLogin()}
+                disabled={isLoading !== null}
+                className="w-full h-12 rounded-xl mb-2 text-sm font-semibold flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(22,163,74,0.2))',
+                  border: `1px solid rgba(34,197,94,0.35)`,
+                  color: css.success,
+                }}
+              >
+                {isLoading === 'dev' ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <FlaskConical size={16} />
+                )}
+                Quick Dev Login
+              </button>
+              <p className={`text-center text-xs mb-5 ${css.muted}`}>
+                Creates{' '}
+                <code className="px-1 py-0.5 rounded text-xs" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  {DEV_EMAIL}
+                </code>{' '}
+                in the local emulator
+              </p>
+
+              <div className="relative flex items-center gap-3 mb-3">
+                <div className={`flex-1 h-px ${css.border} border-t`} />
+                <span className={`text-xs ${css.muted}`}>other options</span>
+                <div className={`flex-1 h-px ${css.border} border-t`} />
+              </div>
+            </>
+          )}
+
           {/* Google */}
           <button
+            id="btn-google-signin"
             onClick={() => void handleGoogleSignIn()}
             disabled={isLoading !== null}
             className="w-full h-12 rounded-xl mb-3 bg-white font-semibold text-sm text-gray-800 flex items-center justify-center gap-3 hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-50"
@@ -229,6 +375,7 @@ export default function LoginPage() {
             </div>
 
             <button
+              id="btn-email-signin"
               type="submit"
               disabled={isLoading !== null}
               className="w-full h-11 rounded-xl mb-3 text-white font-semibold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
@@ -245,6 +392,7 @@ export default function LoginPage() {
 
           {/* Anonymous */}
           <button
+            id="btn-anon-signin"
             onClick={() => void handleAnonymousSignIn()}
             disabled={isLoading !== null}
             className={`w-full h-11 rounded-xl bg-transparent border text-sm font-medium flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50 ${css.border} ${css.secondary}`}
@@ -262,9 +410,11 @@ export default function LoginPage() {
             Continue as Guest
           </button>
 
-          {/* Demo note */}
+          {/* Footer */}
           <p className={`mt-6 text-center text-xs ${css.muted}`}>
-            Demo mode: start Firebase emulators for auth to work
+            {USE_EMULATOR
+              ? '🔧 Emulator mode — all auth is local & safe'
+              : 'Sign in to access real-time venue intelligence'}
           </p>
         </div>
       </motion.div>

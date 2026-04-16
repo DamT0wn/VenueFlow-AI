@@ -1,5 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
-import { firebaseAuth } from './firebase';
+import { getClientAuth } from './firebase';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Socket.io client singleton
@@ -25,7 +25,7 @@ export function getSocket(): Socket {
     autoConnect: false,
     transports: ['websocket', 'polling'],
     auth: async (cb: (data: { token: string }) => void) => {
-      const currentUser = firebaseAuth?.currentUser ?? null;
+      const currentUser = getClientAuth()?.currentUser ?? null;
       if (currentUser) {
         const token = await currentUser.getIdToken(false);
         cb({ token });
