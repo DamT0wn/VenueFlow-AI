@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 1. Lint ─────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx turbo run lint
+
+  # ── 2. Type Check ────────────────────────────────────────────────────────────
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx turbo run type-check
+
+  # ── 3. Unit + Integration Tests ──────────────────────────────────────────────
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      REDIS_URL: redis://localhost:6379
+      FIREBASE_PROJECT_ID: demo-venueflow
+      FIRESTORE_EMULATOR_HOST: localhost:8080
+      FIREBASE_AUTH_EMULATOR_HOST: localhost:9099
+      PUBSUB_EMULATOR_HOST: localhost:8085
+      PUBSUB_PROJECT_ID: demo-venueflow
+      PUBSUB_TOPIC: venue-alerts-test
+      CORS_ORIGINS: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Setup Firebase Emulators
+        run: |
+          npm install -g firebase-tools
+          firebase emulators:start --only auth,firestore,pubsub --project demo-venueflow &
+          sleep 15
+      - run: npm ci
+      - name: Run Backend Tests (Jest)
+        run: |
+          cd apps/api
+          npx jest --coverage --coverageThreshold='{"global":{"statements":80}}'
+      - name: Run Frontend Tests (Vitest)
+        run: |
+          cd apps/web
+          npx vitest run --coverage
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./apps/api/coverage/lcov.info,./apps/web/coverage/lcov.info
+
+  # ── 4. Security Audit ────────────────────────────────────────────────────────
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm audit --audit-level=high --workspace=apps/api --workspace=apps/web
+
+  # ── 5. E2E Tests (Playwright) ────────────────────────────────────────────────
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [lint, type-check]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Start Firebase Emulators
+        run: |
+          npm install -g firebase-tools
+          firebase emulators:start --only auth,firestore,pubsub --project demo-venueflow &
+          sleep 15
+      - name: Build and Start App
+        env:
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: demo-venueflow
+          NEXT_PUBLIC_USE_EMULATOR: 'true'
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+        run: |
+          cd apps/api && npm run build && npm start &
+          cd apps/web && npm run build && npm start &
+          sleep 20
+      - name: Run Playwright Tests
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── 6. Accessibility Scan ────────────────────────────────────────────────────
+  accessibility:
+    name: Accessibility (axe-core)
+    runs-on: ubuntu-latest
+    needs: [e2e]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Run Axe Accessibility Tests
+        run: npx playwright test --grep="@a11y"

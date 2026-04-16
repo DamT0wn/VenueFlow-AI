@@ -1,0 +1,205 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ────────────────────────────────────────────────────────────────────────────
+   CSS Custom Properties — Night Stadium design tokens
+   These shadow the Tailwind config tokens for use in non-Tailwind contexts.
+   ──────────────────────────────────────────────────────────────────────────── */
+:root {
+  --vf-bg-base:          #0A0E1A;
+  --vf-bg-surface:       #111827;
+  --vf-bg-elevated:      #1F2937;
+  --vf-accent-primary:   #6366F1;
+  --vf-accent-success:   #22C55E;
+  --vf-accent-warning:   #EAB308;
+  --vf-accent-danger:    #EF4444;
+  --vf-accent-info:      #3B82F6;
+  --vf-text-primary:     #F9FAFB;
+  --vf-text-secondary:   #9CA3AF;
+  --vf-text-muted:       #6B7280;
+  --vf-border:           #374151;
+  --vf-overlay:          rgba(0, 0, 0, 0.7);
+
+  /* Status colours with opacity for badge backgrounds */
+  --vf-status-low-bg:    rgba(34, 197, 94, 0.15);
+  --vf-status-low-text:  #22C55E;
+  --vf-status-med-bg:    rgba(234, 179, 8, 0.15);
+  --vf-status-med-text:  #EAB308;
+  --vf-status-high-bg:   rgba(239, 68, 68, 0.15);
+  --vf-status-high-text: #EF4444;
+
+  /* Minimum touch target */
+  --touch-target: 44px;
+
+  /* Bottom navigation height */
+  --bottom-nav-height: 64px;
+
+  /* TopBar height */
+  --top-bar-height: 56px;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Base styles
+   ──────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--vf-bg-base);
+    color: var(--vf-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Support safe-area-inset for iOS notch */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--vf-bg-base);
+    overflow-x: hidden;
+  }
+
+  /* Remove default button styles */
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  /* Remove list styles */
+  ul, ol {
+    list-style: none;
+  }
+
+  /* Anchor defaults */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Smooth scrolling (respects prefers-reduced-motion) */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Focus visible — consistent across browsers */
+  :focus-visible {
+    outline: 2px solid var(--vf-accent-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Component utilities
+   ──────────────────────────────────────────────────────────────────────────── */
+@layer components {
+  /* Card */
+  .vf-card {
+    background-color: var(--vf-bg-surface);
+    border: 1px solid var(--vf-border);
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(55, 65, 81, 0.5);
+    transition: box-shadow 0.2s ease;
+  }
+
+  .vf-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2);
+  }
+
+  /* Skeleton loader */
+  .vf-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--vf-bg-elevated) 25%,
+      rgba(55, 65, 81, 0.6) 37%,
+      var(--vf-bg-elevated) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+    border-radius: 0.5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vf-skeleton {
+      animation: none;
+      opacity: 0.6;
+    }
+  }
+
+  /* Status badge base */
+  .vf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+  }
+
+  .vf-badge-low {
+    background-color: var(--vf-status-low-bg);
+    color: var(--vf-status-low-text);
+    border-left: 3px solid var(--vf-status-low-text);
+  }
+  .vf-badge-medium {
+    background-color: var(--vf-status-med-bg);
+    color: var(--vf-status-med-text);
+    border-left: 3px solid var(--vf-status-med-text);
+  }
+  .vf-badge-high {
+    background-color: var(--vf-status-high-bg);
+    color: var(--vf-status-high-text);
+    border-left: 3px solid var(--vf-status-high-text);
+  }
+
+  /* Touch target minimum — wraps interactive elements */
+  .touch-target {
+    min-height: var(--touch-target);
+    min-width: var(--touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Keyframes
+   ──────────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+  @keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Google Maps customisation — remove default UI focus rings
+   ──────────────────────────────────────────────────────────────────────────── */
+.gm-style .gm-style-iw {
+  background: var(--vf-bg-elevated) !important;
+  color: var(--vf-text-primary) !important;
+  border: 1px solid var(--vf-border) !important;
+}
+
+.gm-style .gm-style-iw-d {
+  overflow: hidden !important;
+}

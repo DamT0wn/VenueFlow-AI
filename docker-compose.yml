@@ -1,0 +1,99 @@
+version: "3.9"
+
+services:
+  # ──────────────────────────────────────────────────────────
+  # Redis — Crowd density & queue caching
+  # ──────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: venueflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────
+  # Firebase Emulator Suite
+  # ──────────────────────────────────────────────────────────
+  firebase-emulator:
+    image: andreysenov/firebase-tools:latest
+    container_name: venueflow-firebase-emulator
+    working_dir: /home/node
+    command: >
+      firebase emulators:start
+      --only auth,firestore,storage,pubsub
+      --project demo-venueflow
+      --import=/home/node/.firebase-data
+      --export-on-exit
+    ports:
+      - "4000:4000"   # Emulator UI
+      - "9099:9099"   # Auth emulator
+      - "8080:8080"   # Firestore emulator
+      - "9199:9199"   # Storage emulator
+      - "8085:8085"   # Pub/Sub emulator
+    volumes:
+      - firebase_data:/home/node/.firebase-data
+      - ./firestore.rules:/home/node/firestore.rules
+      - ./firestore.indexes.json:/home/node/firestore.indexes.json
+      - ./firebase.json:/home/node/firebase.json
+    environment:
+      FIREBASE_TOKEN: "fake-token-for-emulator"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────
+  # API — Express 5 + Socket.io backend
+  # ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: development
+    container_name: venueflow-api
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/api:/app
+      - ./packages:/packages
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      REDIS_URL: redis://redis:6379
+      FIREBASE_PROJECT_ID: demo-venueflow
+      FIRESTORE_EMULATOR_HOST: firebase-emulator:8080
+      FIREBASE_AUTH_EMULATOR_HOST: firebase-emulator:9099
+      PUBSUB_EMULATOR_HOST: firebase-emulator:8085
+      PUBSUB_PROJECT_ID: demo-venueflow
+      CORS_ORIGINS: "http://localhost:3000"
+      RATE_LIMIT_WINDOW_MS: "60000"
+      RATE_LIMIT_PUBLIC_MAX: "100"
+      RATE_LIMIT_WRITE_MAX: "20"
+    depends_on:
+      redis:
+        condition: service_healthy
+      firebase-emulator:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  firebase_data:

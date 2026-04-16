@@ -1,0 +1,107 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Utility functions ──────────────────────────────────────────────────
+
+    /** Returns true if the request is from a signed-in user (including anonymous). */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** Returns true if the requesting user has the 'admin' custom claim. */
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+
+    /** Returns true if the requesting user owns the document. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** Returns true if the document being written has not expired. */
+    function isNotExpired() {
+      return !('expiresAt' in request.resource.data)
+          || request.resource.data.expiresAt > request.time;
+    }
+
+    // ── User profiles ──────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      // Users can only read and update their own profile
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+
+      // Admins can read any profile
+      allow read: if isAdmin();
+    }
+
+    // ── Venue data ─────────────────────────────────────────────────────────
+
+    match /venues/{venueId} {
+      // Any authenticated user can read venue data
+      allow read: if isSignedIn();
+      // Only admins can create or modify venue data
+      allow write: if isAdmin();
+    }
+
+    match /crowdSnapshots/{venueId} {
+      // Any authenticated user can read crowd snapshots
+      allow read: if isSignedIn();
+      // Writes only from backend via Firebase Admin SDK (bypasses rules)
+      allow write: if false;
+    }
+
+    // ── Alerts ────────────────────────────────────────────────────────────
+
+    match /alerts/{alertId} {
+      // Any authenticated user can read non-expired alerts for their venue
+      allow read: if isSignedIn();
+
+      // Only admins can create alerts
+      allow create: if isAdmin()
+                    && isNotExpired()
+                    && request.resource.data.keys().hasAll(['venueId', 'title', 'body', 'type', 'expiresAt'])
+                    && request.resource.data.venueId is string
+                    && request.resource.data.title.size() <= 120
+                    && request.resource.data.body.size() <= 1200
+                    && request.resource.data.type in ['critical', 'info', 'evacuation'];
+
+      // Only admins can expire alerts (update expired field)
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['expired', 'expiredAt', 'expiredBy']);
+
+      // No deletes — soft-delete only via expires
+      allow delete: if false;
+    }
+
+    // ── Queue data ────────────────────────────────────────────────────────
+
+    match /queuePoints/{pointId} {
+      // Any authenticated user can read queue data
+      allow read: if isSignedIn();
+      // Writes only from backend
+      allow write: if false;
+    }
+
+    // ── FCM topic subscriptions ───────────────────────────────────────────
+
+    match /fcmSubscriptions/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ── Health check document ─────────────────────────────────────────────
+
+    match /_health/{docId} {
+      // Allow reads for health check endpoint
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── Deny everything else ──────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
