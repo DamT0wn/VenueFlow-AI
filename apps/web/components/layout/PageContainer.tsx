@@ -26,7 +26,7 @@ export function PageContainer({
       className={`
         ${fullBleed
           ? 'h-dvh w-full'
-          : 'min-h-dvh pt-[calc(56px+env(safe-area-inset-top))] pb-[calc(64px+env(safe-area-inset-bottom))] px-4'
+          : 'min-h-dvh pt-[calc(72px+env(safe-area-inset-top))] pb-[calc(68px+env(safe-area-inset-bottom))] px-4'
         }
         ${className}
       `}

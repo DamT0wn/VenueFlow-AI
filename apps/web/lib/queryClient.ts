@@ -14,15 +14,13 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,              // 30 seconds
-      gcTime: 5 * 60 * 1_000,        // 5 minutes
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1_000 * 2 ** attemptIndex, 30_000),
-      refetchOnWindowFocus: true,
-      refetchOnReconnect: true,
+      staleTime:            60_000,   // 1 min — socket handles real-time, REST is secondary
+      gcTime:               3 * 60_000, // 3 min
+      retry:                1,
+      retryDelay:           1_000,
+      refetchOnWindowFocus: false,    // socket keeps data fresh
+      refetchOnReconnect:   true,
     },
-    mutations: {
-      retry: 0,
-    },
+    mutations: { retry: 0 },
   },
 });

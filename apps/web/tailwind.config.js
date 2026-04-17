@@ -10,18 +10,38 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        display: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
-        'dark-base':    '#0A0E1A',
-        'dark-surface': '#111827',
-        'dark-raised':  '#1F2937',
-        'dark-border':  '#374151',
-        'accent':       '#6366F1',
-        'accent-green': '#22C55E',
-        'accent-amber': '#EAB308',
-        'accent-red':   '#EF4444',
-        'accent-blue':  '#3B82F6',
-        'text-dim':     '#9CA3AF',
-        'text-dimmer':  '#6B7280',
+        /* Backgrounds — used as bg-vf-bg-base etc. */
+        'vf-bg-base':     '#0A0F1C',
+        'vf-bg-surface':  '#0F1629',
+        'vf-bg-elevated': '#161D35',
+        /* Accents */
+        'vf-accent-primary': '#6366F1',
+        'vf-accent-success': '#22C55E',
+        'vf-accent-warning': '#F59E0B',
+        'vf-accent-danger':  '#EF4444',
+        'vf-accent-info':    '#38BDF8',
+        /* Text — used as text-vf-text-primary etc. */
+        'vf-text-primary':   '#F1F5F9',
+        'vf-text-secondary': '#94A3B8',
+        'vf-text-muted':     '#475569',
+        /* Border */
+        'vf-border': 'rgba(255,255,255,0.08)',
+      },
+      borderRadius: {
+        'vf-sm': '12px',
+        'vf-md': '16px',
+        'vf-lg': '20px',
+        'vf-xl': '24px',
+      },
+      boxShadow: {
+        'vf-card':         '0 8px 32px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.06) inset',
+        'vf-glow-purple':  '0 0 30px rgba(99,102,241,0.35)',
+        'vf-glow-green':   '0 0 30px rgba(34,197,94,0.3)',
+        'vf-glow-red':     '0 0 30px rgba(239,68,68,0.3)',
       },
     },
   },

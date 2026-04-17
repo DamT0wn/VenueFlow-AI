@@ -1,78 +1,92 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ────────────────────────────────────────────────────────────────────────────
-   CSS Custom Properties — Night Stadium design tokens
-   These shadow the Tailwind config tokens for use in non-Tailwind contexts.
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Design Tokens
+   ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  --vf-bg-base:          #0A0E1A;
-  --vf-bg-surface:       #111827;
-  --vf-bg-elevated:      #1F2937;
-  --vf-accent-primary:   #6366F1;
-  --vf-accent-success:   #22C55E;
-  --vf-accent-warning:   #EAB308;
-  --vf-accent-danger:    #EF4444;
-  --vf-accent-info:      #3B82F6;
-  --vf-text-primary:     #F9FAFB;
-  --vf-text-secondary:   #9CA3AF;
-  --vf-text-muted:       #6B7280;
-  --vf-border:           #374151;
-  --vf-overlay:          rgba(0, 0, 0, 0.7);
+  --vf-bg-base:              #0A0F1C;
+  --vf-bg-surface:           #0F1629;
+  --vf-bg-elevated:          #161D35;
+  --vf-bg-glass:             rgba(15, 22, 41, 0.72);
 
-  /* Status colours with opacity for badge backgrounds */
-  --vf-status-low-bg:    rgba(34, 197, 94, 0.15);
-  --vf-status-low-text:  #22C55E;
-  --vf-status-med-bg:    rgba(234, 179, 8, 0.15);
-  --vf-status-med-text:  #EAB308;
-  --vf-status-high-bg:   rgba(239, 68, 68, 0.15);
-  --vf-status-high-text: #EF4444;
+  --vf-border:               rgba(255, 255, 255, 0.08);
+  --vf-border-bright:        rgba(255, 255, 255, 0.14);
 
-  /* Minimum touch target */
-  --touch-target: 44px;
+  --vf-accent-primary:       #6366F1;
+  --vf-accent-success:       #22C55E;
+  --vf-accent-warning:       #F59E0B;
+  --vf-accent-danger:        #EF4444;
+  --vf-accent-info:          #38BDF8;
 
-  /* Bottom navigation height */
-  --bottom-nav-height: 64px;
+  --vf-text-primary:         #F1F5F9;
+  --vf-text-secondary:       #94A3B8;
+  --vf-text-muted:           #475569;
 
-  /* TopBar height */
-  --top-bar-height: 56px;
+  --touch-target:            44px;
+  --bottom-nav-height:       68px;
+  --top-bar-height:          60px;
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Base styles
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Keyframes — must be at root level, NOT inside @layer
+   ───────────────────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(2.4); opacity: 0;   }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.15); }
+  50%       { box-shadow: 0 0 32px rgba(239, 68, 68, 0.4);  }
+}
+
+@keyframes float-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes bar-fill {
+  from { width: 0%; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Base
+   ───────────────────────────────────────────────────────────────────────────── */
 @layer base {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
   }
 
   html {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     background-color: var(--vf-bg-base);
     color: var(--vf-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Support safe-area-inset for iOS notch */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
   }
 
   body {
     min-height: 100dvh;
     background-color: var(--vf-bg-base);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%,  rgba(56,189,248,0.05) 0%, transparent 50%);
     overflow-x: hidden;
   }
 
-  /* Remove default button styles */
   button {
     cursor: pointer;
     border: none;
@@ -80,98 +94,158 @@
     font-family: inherit;
   }
 
-  /* Remove list styles */
-  ul, ol {
-    list-style: none;
-  }
+  ul, ol { list-style: none; }
+  a      { color: inherit; text-decoration: none; }
 
-  /* Anchor defaults */
-  a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  /* Smooth scrolling (respects prefers-reduced-motion) */
   @media (prefers-reduced-motion: no-preference) {
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
   }
 
-  /* Focus visible — consistent across browsers */
   :focus-visible {
     outline: 2px solid var(--vf-accent-primary);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 6px;
   }
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Component utilities
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Components
+   ───────────────────────────────────────────────────────────────────────────── */
 @layer components {
-  /* Card */
+
+  /* Glass card */
   .vf-card {
-    background-color: var(--vf-bg-surface);
-    border: 1px solid var(--vf-border);
-    border-radius: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(55, 65, 81, 0.5);
-    transition: box-shadow 0.2s ease;
+    background: rgba(15, 22, 41, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+      0 8px 32px rgba(0, 0, 0, 0.4);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
 
   .vf-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2);
+    border-color: rgba(255, 255, 255, 0.13);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+      0 12px 40px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(99, 102, 241, 0.12);
   }
 
-  /* Skeleton loader */
-  .vf-skeleton {
-    background: linear-gradient(
-      90deg,
-      var(--vf-bg-elevated) 25%,
-      rgba(55, 65, 81, 0.6) 37%,
-      var(--vf-bg-elevated) 63%
-    );
-    background-size: 400% 100%;
-    animation: skeleton-shimmer 1.4s ease infinite;
-    border-radius: 0.5rem;
+  /* Accent card */
+  .vf-card-accent {
+    background: linear-gradient(135deg, rgba(99,102,241,0.14) 0%, rgba(99,102,241,0.04) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(99, 102, 241, 0.28);
+    border-radius: 24px;
+    box-shadow:
+      0 1px 0 0 rgba(99, 102, 241, 0.18) inset,
+      0 0 40px rgba(99, 102, 241, 0.10),
+      0 8px 32px rgba(0, 0, 0, 0.4);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .vf-skeleton {
-      animation: none;
-      opacity: 0.6;
-    }
-  }
-
-  /* Status badge base */
+  /* Status badges */
   .vf-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.125rem 0.625rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .vf-badge-high   { background: rgba(239,68,68,0.12);  color: #EF4444; border: 1px solid rgba(239,68,68,0.25);  }
+  .vf-badge-medium { background: rgba(245,158,11,0.12); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+  .vf-badge-low    { background: rgba(34,197,94,0.12);  color: #22C55E; border: 1px solid rgba(34,197,94,0.25);  }
+  .vf-badge-info   { background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.25); }
+
+  /* Progress track */
+  .vf-progress-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+
+  .vf-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Input */
+  .vf-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #F1F5F9;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    font-family: inherit;
+  }
+
+  .vf-input::placeholder { color: #475569; }
+
+  .vf-input:focus {
+    border-color: #6366F1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
+  /* Primary button */
+  .vf-btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    text-decoration: none;
+  }
+
+  .vf-btn-primary:hover  { opacity: 0.92; }
+  .vf-btn-primary:active { transform: scale(0.98); box-shadow: 0 2px 10px rgba(99,102,241,0.3); }
+  .vf-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Secondary button */
+  .vf-btn-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94A3B8;
+    font-size: 13px;
     font-weight: 500;
-    line-height: 1.25rem;
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+    font-family: inherit;
   }
 
-  .vf-badge-low {
-    background-color: var(--vf-status-low-bg);
-    color: var(--vf-status-low-text);
-    border-left: 3px solid var(--vf-status-low-text);
-  }
-  .vf-badge-medium {
-    background-color: var(--vf-status-med-bg);
-    color: var(--vf-status-med-text);
-    border-left: 3px solid var(--vf-status-med-text);
-  }
-  .vf-badge-high {
-    background-color: var(--vf-status-high-bg);
-    color: var(--vf-status-high-text);
-    border-left: 3px solid var(--vf-status-high-text);
-  }
+  .vf-btn-secondary:hover { background: rgba(255,255,255,0.09); color: #F1F5F9; }
 
-  /* Touch target minimum — wraps interactive elements */
+  /* Touch target */
   .touch-target {
     min-height: var(--touch-target);
     min-width: var(--touch-target);
@@ -179,27 +253,37 @@
     align-items: center;
     justify-content: center;
   }
-}
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Keyframes
-   ──────────────────────────────────────────────────────────────────────────── */
-@layer utilities {
-  @keyframes skeleton-shimmer {
-    0% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  /* Skeleton */
+  .vf-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--vf-bg-elevated) 25%,
+      rgba(255, 255, 255, 0.04) 37%,
+      var(--vf-bg-elevated) 63%
+    );
+    background-size: 400% 100%;
+    animation: shimmer 1.6s ease infinite;
+    border-radius: 8px;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vf-skeleton { animation: none; opacity: 0.5; }
+  }
+
+  /* Animation helpers */
+  .animate-glow-pulse { animation: glow-pulse 2.5s ease-in-out infinite; }
+  .animate-float-up   { animation: float-up 0.4s ease-out both; }
+  .animate-pulse-ring { animation: pulse-ring 1.8s cubic-bezier(0.4,0,0.6,1) infinite; }
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Google Maps customisation — remove default UI focus rings
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Google Maps overrides
+   ───────────────────────────────────────────────────────────────────────────── */
 .gm-style .gm-style-iw {
   background: var(--vf-bg-elevated) !important;
   color: var(--vf-text-primary) !important;
   border: 1px solid var(--vf-border) !important;
 }
 
-.gm-style .gm-style-iw-d {
-  overflow: hidden !important;
-}
+.gm-style .gm-style-iw-d { overflow: hidden !important; }

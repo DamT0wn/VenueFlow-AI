@@ -29,8 +29,8 @@ interface VenueState {
   reset: () => void;
 }
 
-const DEFAULT_VENUE_ID = 'venue-stadium-one';
-const DEFAULT_VENUE_NAME = 'Stadium One';
+const DEFAULT_VENUE_ID   = 'venue-chinnaswamy';
+const DEFAULT_VENUE_NAME = 'M. Chinnaswamy Stadium';
 
 /**
  * Zustand store for venue and crowd state.

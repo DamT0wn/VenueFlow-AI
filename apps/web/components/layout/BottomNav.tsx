@@ -1,88 +1,97 @@
 'use client';
 
+import { memo, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Map, Navigation, Clock, Bell, Star } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useReducedMotion } from 'framer-motion';
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Bottom Navigation — Radix Tabs pattern with keyboard navigation
-// ──────────────────────────────────────────────────────────────────────────────
+import { motion, useReducedMotion } from 'framer-motion';
+import { getSocket } from '../../lib/socket';
 
 const NAV_ITEMS = [
-  { href: '/map',             label: 'Map',        Icon: Map        },
-  { href: '/navigate',        label: 'Navigate',   Icon: Navigation },
-  { href: '/queues',          label: 'Queues',     Icon: Clock      },
-  { href: '/alerts',          label: 'Alerts',     Icon: Bell       },
-  { href: '/recommendations', label: 'For You',    Icon: Star       },
+  { href: '/map',             label: 'Map',      Icon: Map        },
+  { href: '/navigate',        label: 'Navigate', Icon: Navigation },
+  { href: '/queues',          label: 'Queues',   Icon: Clock      },
+  { href: '/alerts',          label: 'Alerts',   Icon: Bell       },
+  { href: '/recommendations', label: 'For You',  Icon: Star       },
 ] as const;
 
-/**
- * Fixed-bottom primary navigation bar.
- * Meets WCAG 2.1 AA: 48px height items, keyboard navigable, aria-label on nav.
- */
-export function BottomNav() {
-  const pathname = usePathname();
+export const BottomNav = memo(function BottomNav() {
+  const pathname          = usePathname();
   const shouldReduceMotion = useReducedMotion();
+  const [alertCount, setAlertCount] = useState(0);
+
+  useEffect(() => {
+    const socket = getSocket();
+    const onAlert = () => setAlertCount(c => c + 1);
+    socket.on('alert:new', onAlert);
+    return () => { socket.off('alert:new', onAlert); };
+  }, []);
+
+  useEffect(() => {
+    if (pathname === '/alerts') setAlertCount(0);
+  }, [pathname]);
 
   return (
     <nav
       aria-label="Main navigation"
-      className="
-        fixed bottom-0 left-0 right-0 z-40
-        flex items-center justify-around
-        bg-vf-bg-surface border-t border-vf-border
-        h-16 pb-[env(safe-area-inset-bottom)]
-        px-1
-      "
       role="tablist"
+      className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2"
+      style={{
+        height: '68px',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        background: 'rgba(10,15,28,0.92)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderTop: '1px solid rgba(255,255,255,0.07)',
+      }}
     >
       {NAV_ITEMS.map(({ href, label, Icon }) => {
-        const isActive = pathname === href || pathname.startsWith(`${href}/`);
+        const isActive  = pathname === href || pathname.startsWith(`${href}/`);
+        const isAlerts  = href === '/alerts';
+        const showBadge = isAlerts && alertCount > 0;
+
         return (
           <Link
             key={href}
             href={href}
             role="tab"
             aria-selected={isActive}
-            aria-label={label}
-            className="
-              relative flex flex-col items-center justify-center gap-0.5
-              min-h-[48px] min-w-[48px] flex-1
-              rounded-xl transition-colors duration-150
-              focus-visible:outline-none focus-visible:ring-2
-              focus-visible:ring-vf-accent-primary focus-visible:ring-offset-2
-              focus-visible:ring-offset-vf-bg-surface
-            "
+            aria-label={showBadge ? `${label} — ${alertCount} new` : label}
+            className="relative flex flex-col items-center justify-center gap-1 flex-1 min-h-[48px] rounded-2xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vf-accent-primary"
           >
-            <Icon
-              size={22}
-              strokeWidth={isActive ? 2.5 : 1.75}
-              className={isActive ? 'text-vf-accent-primary' : 'text-vf-text-secondary'}
-              aria-hidden="true"
-            />
-            <span
-              className={`
-                text-[10px] font-medium leading-none transition-colors duration-150
-                ${isActive ? 'text-vf-accent-primary' : 'text-vf-text-secondary'}
-              `}
-            >
-              {label}
-            </span>
             {isActive && (
               <motion.span
-                layoutId="bottom-nav-indicator"
-                className="absolute bottom-0.5 h-0.5 w-8 rounded-full bg-vf-accent-primary"
-                initial={shouldReduceMotion ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                aria-hidden="true"
+                layoutId="nav-bg"
+                className="absolute inset-x-1 inset-y-1 rounded-xl"
+                style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)' }}
+                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                aria-hidden
               />
             )}
+            <div className="relative z-10">
+              <Icon
+                size={21}
+                strokeWidth={isActive ? 2.5 : 1.75}
+                style={{ color: isActive ? '#6366F1' : '#475569' }}
+                aria-hidden
+              />
+              {showBadge && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-1 rounded-full text-white flex items-center justify-center"
+                  style={{ background: '#EF4444', fontSize: '9px', fontWeight: 700 }}
+                  aria-hidden
+                >
+                  {alertCount > 9 ? '9+' : alertCount}
+                </span>
+              )}
+            </div>
+            <span className="relative z-10 text-[10px] font-medium leading-none"
+              style={{ color: isActive ? '#6366F1' : '#475569' }}>
+              {label}
+            </span>
           </Link>
         );
       })}
     </nav>
   );
-}
+});

@@ -73,7 +73,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://maps.googleapis.com" />
         <link rel="preconnect" href="https://maps.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="bg-vf-bg-base text-vf-text-primary font-display antialiased">
+      <body className="antialiased" style={{ background: 'var(--vf-bg-base)', color: 'var(--vf-text-primary)', fontFamily: 'Inter, system-ui, sans-serif' }}>
         {/* Skip to main content — accessibility first element */}
         <a
           href="#main-content"

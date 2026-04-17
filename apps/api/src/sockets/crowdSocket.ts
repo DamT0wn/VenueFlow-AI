@@ -29,6 +29,13 @@ export function registerCrowdSocket(io: SocketIOServer): void {
     const handshakeAuth = socket.handshake.auth as SocketHandshakeAuth;
     const token = handshakeAuth.token;
 
+    // ── Dev bypass — skip auth when not in production ──────────────────────
+    if (process.env['NODE_ENV'] !== 'production' && token === 'dev-bypass') {
+      socket.data = { uid: 'dev-user', role: 'user', venueId: undefined };
+      next();
+      return;
+    }
+
     if (!token) {
       logger.warn({ message: 'Socket: missing auth token', socketId: socket.id });
       next(new Error('Authentication required'));
