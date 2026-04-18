@@ -116,7 +116,7 @@ export async function computeQueuePoint(
 
 /**
  * Retrieves all queue points for a venue, sorted by status (high first).
- * Reads from Redis; falls back to computing from the current crowd snapshot.
+ * Uses Redis MGET for a single batch read instead of N individual GETs.
  *
  * @param {string} venueId      - Venue ID
  * @param {ZoneData[]} zones    - Current zone data (used as fallback)
@@ -134,9 +134,17 @@ export async function getAllQueuePoints(
     ['food', 'restroom', 'gate', 'exit', 'first_aid'].includes(n.type),
   );
 
-  for (const node of serviceNodes) {
-    const cacheKey = queuePointKey(venueId, node.id);
-    const cached = await redis.get(cacheKey);
+  if (serviceNodes.length === 0) return [];
+
+  // ── Batch read all cache keys in a single MGET ────────────────────────────
+  const cacheKeys = serviceNodes.map((n) => queuePointKey(venueId, n.id));
+  const cachedValues = await redis.mget(...cacheKeys);
+
+  const missingNodes: typeof serviceNodes = [];
+
+  for (let i = 0; i < serviceNodes.length; i++) {
+    const node = serviceNodes[i]!;
+    const cached = cachedValues[i];
 
     if (cached) {
       try {
@@ -148,8 +156,11 @@ export async function getAllQueuePoints(
         // Fall through to recompute
       }
     }
+    missingNodes.push(node);
+  }
 
-    // Compute from zone data (match by proximity / name similarity)
+  // ── Compute missing nodes (cache miss or parse failure) ───────────────────
+  for (const node of missingNodes) {
     const matchedZone = zones.find(
       (z) => z.id.includes(node.id) || node.id.includes(z.id.replace('zone-', '')),
     ) ?? zones[0];
@@ -168,6 +179,7 @@ export async function getAllQueuePoints(
     message: 'Queue points fetched',
     venueId,
     count: results.length,
+    cacheHits: results.length - missingNodes.length,
   });
 
   return results;

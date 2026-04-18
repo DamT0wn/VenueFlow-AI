@@ -110,3 +110,19 @@ export function trackEvent(event: TrackableEvent): void {
   if (!GA_MEASUREMENT_ID) return;
   gtag('event', event.name, event.params);
 }
+
+/**
+ * Grants analytics consent — call after user accepts the consent banner.
+ * Alias for updateAnalyticsConsent(true) for clearer call sites.
+ */
+export function grantAnalyticsConsent(): void {
+  updateAnalyticsConsent(true);
+}
+
+/**
+ * Denies analytics consent — call after user declines the consent banner.
+ * Alias for updateAnalyticsConsent(false) for clearer call sites.
+ */
+export function denyAnalyticsConsent(): void {
+  updateAnalyticsConsent(false);
+}

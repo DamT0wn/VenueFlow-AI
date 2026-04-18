@@ -29,16 +29,11 @@ export function registerCrowdSocket(io: SocketIOServer): void {
     const handshakeAuth = socket.handshake.auth as SocketHandshakeAuth;
     const token = handshakeAuth.token;
 
-    // ── Dev bypass — skip auth when not in production ──────────────────────
-    if (process.env['NODE_ENV'] !== 'production' && token === 'dev-bypass') {
-      socket.data = { uid: 'dev-user', role: 'user', venueId: undefined };
+    // ── Auth bypass — login removed for hackathon demo ────────────────────
+    // Accept dev-bypass token in all environments, or skip auth entirely
+    if (!token || token === 'dev-bypass') {
+      socket.data = { uid: 'guest-user', role: 'user', venueId: undefined };
       next();
-      return;
-    }
-
-    if (!token) {
-      logger.warn({ message: 'Socket: missing auth token', socketId: socket.id });
-      next(new Error('Authentication required'));
       return;
     }
 
@@ -69,8 +64,20 @@ export function registerCrowdSocket(io: SocketIOServer): void {
 
     logger.info({ message: 'Socket: client connected', socketId: socket.id, uid });
 
+    // ── Per-socket rate limiting for join:venue events ──────────────────────
+    let joinAttempts = 0;
+    const RATE_WINDOW_MS = 10_000;
+    const MAX_JOINS_PER_WINDOW = 5;
+    setInterval(() => { joinAttempts = 0; }, RATE_WINDOW_MS);
+
     // ── Join venue room ─────────────────────────────────────────────────────
     socket.on('join:venue', (requestedVenueId: unknown) => {
+      joinAttempts++;
+      if (joinAttempts > MAX_JOINS_PER_WINDOW) {
+        socket.emit('error', { code: 'RATE_LIMITED', message: 'Too many join requests' });
+        logger.warn({ message: 'Socket: rate limited join:venue', socketId: socket.id, uid });
+        return;
+      }
       if (typeof requestedVenueId !== 'string' || !requestedVenueId) {
         socket.emit('error', { code: 'INVALID_VENUE_ID', message: 'Invalid venueId' });
         return;

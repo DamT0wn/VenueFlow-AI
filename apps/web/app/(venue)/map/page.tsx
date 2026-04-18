@@ -1,14 +1,15 @@
 'use client';
 
-import { memo, useMemo, useState, useCallback } from 'react';
+import { memo, useMemo, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Radio, Users, Flame, TrendingUp, TrendingDown, Minus, X, MapPin, Navigation } from 'lucide-react';
+import { Radio, Flame, TrendingUp, TrendingDown, Minus, X, MapPin, Navigation } from 'lucide-react';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { useVenueStore } from '../../../store/venueStore';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { VENUE_ZONES } from '../../../components/map/VenueMap';
 import type { MapZone } from '../../../components/map/VenueMap';
+import { trackEvent } from '../../../lib/analytics';
 
 // Lazy-load the heavy Google Maps component
 const VenueMap = dynamic(
@@ -100,10 +101,11 @@ const MiniHeatmap = memo(function MiniHeatmap({ zones }: { zones: Zone[] }) {
               const zone = zones.find(z => z.id === cell.id);
               const d = zone?.density ?? 0;
               const { color, bg } = densityMeta(d);
+              const cellLabel = 'label' in cell ? cell.label : '';
               return (
                 <div key={cell.id} className="flex-1 h-10 rounded-xl flex flex-col items-center justify-center"
                   style={{ background: bg, border: `1px solid ${color}44` }}>
-                  <span className="text-[9px] font-semibold leading-none" style={{ color }}>{cell.label}</span>
+                  <span className="text-[9px] font-semibold leading-none" style={{ color }}>{cellLabel}</span>
                   <span className="text-[11px] font-black leading-none mt-0.5" style={{ color }}>{d}%</span>
                 </div>
               );
@@ -237,14 +239,21 @@ const FILTERS = [
 export default function MapPage() {
   const venueName      = useVenueStore(s => s.venueName);
   const crowdSnapshot  = useVenueStore(s => s.crowdSnapshot);
+  const venueId        = useVenueStore(s => s.venueId);
   const [selected, setSelected] = useState<Zone | null>(null);
   const [filter, setFilter]     = useState<'all' | 'high' | 'med' | 'low'>('all');
+
+  // Track map load event once
+  useEffect(() => {
+    trackEvent({ name: 'venueflow_map_loaded', params: { venue_id: venueId } });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Derive zones from live snapshot or fall back to seed data
   const zones = useMemo<Zone[]>(() => {
     if (!crowdSnapshot) return SEED_ZONES;
     return crowdSnapshot.zones.map(z => ({
-      id: String(z.nodeId),
+      id: z.id ?? String((z as unknown as { nodeId?: number }).nodeId ?? Math.random()),
       name: z.name,
       density: z.density,
       trend: 'flat' as const,
@@ -283,56 +292,146 @@ export default function MapPage() {
 
   return (
     <PageContainer>
-      {/* Hero */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-        className="vf-card-accent p-5 mb-4 mt-2">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Radio size={13} style={{ color: '#6366F1' }} />
-            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#94A3B8' }}>Live Occupancy</span>
-          </div>
-          {lastUpdated && (
-            <span className="text-[10px] tabular-nums" style={{ color: '#475569' }}>
-              {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </span>
-          )}
-        </div>
-        <div className="flex items-end justify-between mb-4">
-          <div>
-            <div className="flex items-end gap-1">
-              <span className="text-6xl font-black tracking-tight" style={{ color: '#F1F5F9', lineHeight: 1 }}>{overall}</span>
-              <span className="text-2xl font-bold mb-1" style={{ color: '#6366F1' }}>%</span>
+      {/* ── Hero — dramatic crowd intelligence card ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+        className="relative mb-4 mt-2 rounded-3xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(15,22,41,0.95) 50%, rgba(200,16,46,0.12) 100%)',
+          border: '1px solid rgba(99,102,241,0.3)',
+          boxShadow: '0 0 40px rgba(99,102,241,0.15), 0 16px 48px rgba(0,0,0,0.5)',
+        }}
+      >
+        {/* Animated gradient sweep */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(99,102,241,0.06) 50%, transparent 60%)' }}
+          animate={{ x: ['-100%', '200%'] }}
+          transition={{ duration: 4, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
+        />
+
+        <div className="relative p-5">
+          {/* Top row */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Radio size={14} style={{ color: '#6366F1' }} />
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: 'rgba(99,102,241,0.3)' }}
+                  animate={{ scale: [1, 2, 1], opacity: [0.6, 0, 0.6] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </div>
+              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#6366F1' }}>
+                Live Occupancy
+              </span>
             </div>
-            <p className="text-[13px] mt-1" style={{ color: '#94A3B8' }}>{venueName}</p>
-          </div>
-          <div className="text-right">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-1"
-              style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}>
-              <Users size={12} style={{ color: '#22C55E' }} />
-              <span className="text-[13px] font-bold" style={{ color: '#22C55E' }}>~38,000</span>
+            <div className="flex items-center gap-2">
+              {lastUpdated && (
+                <span className="text-[10px] tabular-nums font-medium" style={{ color: '#475569' }}>
+                  {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+              )}
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full"
+                style={{ background: crowdSnapshot ? 'rgba(34,197,94,0.12)' : 'rgba(71,85,105,0.15)', border: `1px solid ${crowdSnapshot ? 'rgba(34,197,94,0.3)' : 'rgba(71,85,105,0.25)'}` }}>
+                <span className="relative flex h-1.5 w-1.5">
+                  {crowdSnapshot && <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#22C55E' }} />}
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: crowdSnapshot ? '#22C55E' : '#475569' }} />
+                </span>
+                <span className="text-[9px] font-bold" style={{ color: crowdSnapshot ? '#22C55E' : '#475569' }}>
+                  {crowdSnapshot ? 'LIVE' : 'SEED'}
+                </span>
+              </div>
             </div>
-            <p className="text-[10px]" style={{ color: '#475569' }}>crowd estimate</p>
           </div>
-        </div>
-        <div className="relative h-7 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-          <motion.div className="absolute inset-y-0 left-0 rounded-full flex items-center justify-end pr-2"
-            animate={{ width: `${overall}%` }}
-            transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
-            style={{ background: 'linear-gradient(90deg, #FDB913, #C8102E)', minWidth: overall > 10 ? undefined : '40px' }}>
-            <span className="text-[11px] font-bold text-white">{overall}%</span>
-          </motion.div>
-        </div>
-        <div className="flex gap-2 mt-3">
-          {[
-            { label: 'Hot zones',   value: hotCount,   color: '#EF4444' },
-            { label: 'Zones clear', value: clearCount, color: '#22C55E' },
-            { label: 'Updating',    value: crowdSnapshot ? 'LIVE' : 'SEED', color: crowdSnapshot ? '#22C55E' : '#475569' },
-          ].map(s => (
-            <div key={s.label} className="flex-1 rounded-xl py-2 text-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
-              <p className="text-[15px] font-bold" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-[9px] mt-0.5" style={{ color: '#475569' }}>{s.label}</p>
+
+          {/* Big number */}
+          <div className="flex items-end justify-between mb-5">
+            <div>
+              <motion.div
+                className="flex items-end gap-1"
+                key={overall}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <span className="font-display text-7xl font-black tracking-tight text-glow-purple"
+                  style={{ color: '#F1F5F9', lineHeight: 1, letterSpacing: '-0.03em' }}>
+                  {overall}
+                </span>
+                <span className="text-3xl font-black mb-1.5" style={{ color: '#6366F1' }}>%</span>
+              </motion.div>
+              <p className="text-[12px] font-medium mt-1" style={{ color: '#94A3B8' }}>{venueName}</p>
             </div>
-          ))}
+
+            {/* Crowd count ring */}
+            <div className="relative flex items-center justify-center">
+              <svg width="72" height="72" viewBox="0 0 72 72" className="-rotate-90">
+                <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+                <motion.circle
+                  cx="36" cy="36" r="28" fill="none"
+                  stroke="url(#crowdGrad)" strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 28}`}
+                  initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
+                  animate={{ strokeDashoffset: 2 * Math.PI * 28 * (1 - overall / 100) }}
+                  transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1], delay: 0.3 }}
+                />
+                <defs>
+                  <linearGradient id="crowdGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#FDB913" />
+                    <stop offset="100%" stopColor="#C8102E" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute text-center">
+                <p className="text-[11px] font-black" style={{ color: '#FDB913' }}>38K</p>
+                <p className="text-[8px]" style={{ color: '#475569' }}>fans</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress bar — gradient */}
+          <div className="relative h-2.5 rounded-full overflow-hidden mb-4" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <motion.div
+              className="absolute inset-y-0 left-0 rounded-full"
+              animate={{ width: `${overall}%` }}
+              transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
+              style={{ background: 'linear-gradient(90deg, #6366F1, #FDB913, #C8102E)', minWidth: '24px' }}
+            />
+            {/* Shimmer on bar */}
+            <motion.div
+              className="absolute inset-y-0 rounded-full"
+              style={{ width: '40px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
+              animate={{ left: ['-10%', `${overall + 5}%`] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 1.5, ease: 'easeInOut' }}
+            />
+          </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Hot zones',   value: String(hotCount),   color: '#EF4444', bg: 'rgba(239,68,68,0.1)',  icon: '🔥' },
+              { label: 'Clear',       value: String(clearCount), color: '#22C55E', bg: 'rgba(34,197,94,0.1)',  icon: '✅' },
+              { label: 'Avg density', value: `${overall}%`,      color: '#FDB913', bg: 'rgba(253,185,19,0.1)', icon: '📊' },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.08 }}
+                className="rounded-2xl py-2.5 px-2 text-center"
+                style={{ background: s.bg, border: `1px solid ${s.color}22` }}
+              >
+                <p className="text-base mb-0.5">{s.icon}</p>
+                <p className="text-[15px] font-black leading-none" style={{ color: s.color }}>{s.value}</p>
+                <p className="text-[9px] mt-0.5 font-medium" style={{ color: '#475569' }}>{s.label}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </motion.div>
 
@@ -377,6 +476,18 @@ export default function MapPage() {
       <AnimatePresence>
         {selected && <ZoneSheet zone={selected} onClose={() => setSelected(null)} />}
       </AnimatePresence>
+
+      {/* ARIA live region — announces crowd updates to screen readers */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {crowdSnapshot
+          ? `Crowd update: ${overall}% overall occupancy at ${venueName}. ${hotCount} high-density zones.`
+          : `Showing estimated crowd data for ${venueName}.`}
+      </div>
     </PageContainer>
   );
 }

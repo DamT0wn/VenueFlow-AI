@@ -2,6 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // ── Standalone output — required for Cloud Run Docker deployment ──────────
+  // Produces a self-contained server in .next/standalone with minimal deps
+  output: 'standalone',
+
   // ── Compiler optimizations ────────────────────────────────────────────────
   compiler: {
     // Remove console.log in production

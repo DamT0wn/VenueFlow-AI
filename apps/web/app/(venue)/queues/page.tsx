@@ -93,22 +93,47 @@ export default function QueuesPage() {
 
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 mb-4 flex items-center justify-between"
-          style={{ background: 'linear-gradient(135deg, rgba(253,185,19,0.12), rgba(200,16,46,0.08))', border: '1px solid rgba(253,185,19,0.2)' }}>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: '#94A3B8' }}>Average Wait</p>
-            <div className="flex items-end gap-1">
-              <span className="text-5xl font-black" style={{ color: '#F1F5F9', lineHeight: 1 }}>{avgWait}</span>
-              <span className="text-xl font-bold mb-1" style={{ color: '#FDB913' }}>min</span>
+          className="relative rounded-3xl p-5 mb-4 overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(253,185,19,0.15) 0%, rgba(15,22,41,0.95) 60%, rgba(200,16,46,0.1) 100%)',
+            border: '1px solid rgba(253,185,19,0.25)',
+            boxShadow: '0 0 30px rgba(253,185,19,0.1), 0 16px 48px rgba(0,0,0,0.5)',
+          }}>
+          {/* Sweep animation */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(253,185,19,0.05) 50%, transparent 60%)' }}
+            animate={{ x: ['-100%', '200%'] }}
+            transition={{ duration: 4, repeat: Infinity, repeatDelay: 4 }}
+          />
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: '#94A3B8' }}>Average Wait</p>
+              <div className="flex items-end gap-1">
+                <motion.span
+                  key={avgWait}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="font-display text-6xl font-black"
+                  style={{ color: '#F1F5F9', lineHeight: 1, letterSpacing: '-0.03em' }}
+                >
+                  {avgWait}
+                </motion.span>
+                <span className="text-2xl font-black mb-1.5" style={{ color: '#FDB913' }}>min</span>
+              </div>
+              <p className="text-[11px] mt-1" style={{ color: '#475569' }}>across all zones</p>
             </div>
-          </div>
-          <div className="text-right">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-1.5"
-              style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}>
-              <TrendingDown size={12} style={{ color: '#22C55E' }} />
-              <span className="text-[12px] font-bold" style={{ color: '#22C55E' }}>Improving</span>
+            <div className="text-right flex flex-col items-end gap-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                <TrendingDown size={12} style={{ color: '#22C55E' }} />
+                <span className="text-[12px] font-bold" style={{ color: '#22C55E' }}>Improving</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                style={{ background: 'rgba(253,185,19,0.1)', border: '1px solid rgba(253,185,19,0.2)' }}>
+                <span className="text-[12px] font-bold" style={{ color: '#FDB913' }}>{clearCnt} clear</span>
+              </div>
             </div>
-            <p className="text-[11px]" style={{ color: '#475569' }}>{clearCnt} zones clear</p>
           </div>
         </motion.div>
 

@@ -22,7 +22,7 @@ export function validate<T>(schema: ZodSchema<T>, part: RequestPart = 'body') {
     if (result.success) {
       // Overwrite the request part with the validated+coerced value
       // Using type assertion here is intentional — we've validated the shape
-      (req as Record<string, unknown>)[part] = result.data;
+      (req as unknown as Record<string, unknown>)[part] = result.data;
       next();
       return;
     }

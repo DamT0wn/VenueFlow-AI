@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // ── Venue data ────────────────────────────────────────────────────────────────
 export const VENUE_CENTER = { lat: 12.9792, lng: 77.5996 };
@@ -114,55 +114,6 @@ function useMapsReady(): LoadState {
   }, [apiKey]);
 
   return state;
-}
-
-// ── Marker HTML builder ───────────────────────────────────────────────────────
-function buildMarkerContent(zone: MapZone): HTMLElement {
-  const color = densityColor(zone.density);
-  const isHigh = zone.density >= 80;
-
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;';
-
-  const circle = document.createElement('div');
-  circle.style.cssText = `
-    position:relative;
-    background:${color};
-    border:2.5px solid rgba(255,255,255,0.95);
-    border-radius:50%;
-    width:38px;height:38px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:11px;font-weight:800;color:#fff;
-    font-family:Inter,sans-serif;
-    box-shadow:0 2px 12px ${color}99,0 0 0 3px ${color}22;
-  `;
-  circle.textContent = `${zone.density}%`;
-
-  if (isHigh) {
-    const ring = document.createElement('span');
-    ring.style.cssText = `
-      position:absolute;inset:-5px;border-radius:50%;
-      border:2px solid ${color};
-      animation:vfPulse 1.8s cubic-bezier(0.4,0,0.6,1) infinite;
-      pointer-events:none;
-    `;
-    circle.appendChild(ring);
-  }
-
-  const label = document.createElement('div');
-  label.style.cssText = `
-    background:rgba(10,15,28,0.9);
-    border:1px solid ${color}55;
-    border-radius:6px;padding:2px 7px;margin-top:4px;
-    font-size:9px;font-weight:600;color:#F1F5F9;
-    font-family:Inter,sans-serif;white-space:nowrap;
-    box-shadow:0 2px 8px rgba(0,0,0,0.4);
-  `;
-  label.textContent = zone.name;
-
-  wrap.appendChild(circle);
-  wrap.appendChild(label);
-  return wrap;
 }
 
 // ── Inject pulse keyframe once ────────────────────────────────────────────────
@@ -297,16 +248,20 @@ export function VenueMap({
 
   if (mapsReady === 'error') {
     return (
-      <div style={{
-        width: '100%', height, borderRadius: '20px',
-        background: '#0F1629', border: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', gap: '8px',
-      }}>
-        <span style={{ fontSize: '28px' }}>🗺️</span>
+      <div
+        role="img"
+        aria-label="Map unavailable — Google Maps API key not configured"
+        style={{
+          width: '100%', height, borderRadius: '20px',
+          background: '#0F1629', border: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: '8px',
+        }}
+      >
+        <span style={{ fontSize: '28px' }} aria-hidden="true">🗺️</span>
         <p style={{ color: '#94A3B8', fontSize: '13px', fontWeight: 600 }}>Map unavailable</p>
         <p style={{ color: '#475569', fontSize: '11px', textAlign: 'center', padding: '0 16px' }}>
-          Check your Google Maps API key
+          Check your Google Maps API key in <code>.env.local</code>
         </p>
       </div>
     );

@@ -24,10 +24,10 @@ router.get(
   asyncHandler(async (req, res) => {
     const { venueId } = req.params as z.infer<typeof ParamsSchema>;
 
-    let zones: ReturnType<Awaited<ReturnType<typeof getCrowdSnapshot>>['zones']['map']> = [];
+    let zones: { lat: number; lng: number; density: number; id: string; name: string; radius: number; updatedAt: Date }[] = [];
     try {
       const snapshot = await getCrowdSnapshot(venueId);
-      zones = snapshot.zones;
+      zones = snapshot.zones as typeof zones;
     } catch {
       // Continue with empty zones — queue service handles fallback
     }

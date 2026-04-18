@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import { auth } from '../lib/firebaseAdmin';
 import { AppError, ErrorCode } from './errorHandler';
 import { logger } from '../lib/logger';
 
@@ -26,40 +25,16 @@ declare global {
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
- * Verifies the Firebase ID token from the `Authorization: Bearer <token>` header.
- * Attaches the decoded token as `req.user` on success.
- *
- * @throws {AppError} 401 if token is missing or invalid
+ * Auth completely bypassed — login removed for hackathon demo.
+ * verifyToken is a no-op passthrough; req.user is set to a guest identity.
  */
 export async function verifyToken(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith('Bearer ')) {
-    next(new AppError('Missing or malformed Authorization header', 401, ErrorCode.UNAUTHORIZED));
-    return;
-  }
-
-  const token = authHeader.slice(7);
-
-  try {
-    const decoded = await auth().verifyIdToken(token, /* checkRevoked */ true);
-
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email,
-      role: decoded['role'] as string | undefined,
-      venueId: decoded['venueId'] as string | undefined,
-    };
-
-    next();
-  } catch (err: unknown) {
-    logger.warn({ message: 'Auth: invalid token', error: (err as Error).message });
-    next(new AppError('Invalid or expired token', 401, ErrorCode.UNAUTHORIZED));
-  }
+  req.user = { uid: 'guest', role: 'user' };
+  next();
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -109,34 +84,11 @@ export function requireRole(role: string) {
 // Optional auth — attaches user if token present, does not block if absent
 // ──────────────────────────────────────────────────────────────────────────────
 
-/**
- * Like `verifyToken` but does not fail on missing tokens.
- * Use for routes that serve both authenticated and anonymous users.
- */
+/** No-op optional auth — login removed for hackathon demo. */
 export async function optionalAuth(
-  req: Request,
+  _req: Request,
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith('Bearer ')) {
-    next();
-    return;
-  }
-
-  try {
-    const token = authHeader.slice(7);
-    const decoded = await auth().verifyIdToken(token);
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email,
-      role: decoded['role'] as string | undefined,
-      venueId: decoded['venueId'] as string | undefined,
-    };
-  } catch {
-    // Token invalid — proceed as anonymous
-  }
-
   next();
 }

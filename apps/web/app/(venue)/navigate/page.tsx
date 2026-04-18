@@ -2,15 +2,14 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Navigation, Search, MapPin, ChevronRight, Footprints,
-  ArrowUpDown, LocateFixed, X, Utensils, Toilet, DoorOpen, HeartPulse, Star, Accessibility,
+import { Navigation, Search, MapPin, ChevronRight, Footprints,
+  ArrowUpDown, LocateFixed, X, Toilet, DoorOpen, HeartPulse, Star, Accessibility,
 } from 'lucide-react';
 import { useVenueStore } from '../../../store/venueStore';
-import { PageContainer } from '../../../components/layout/PageContainer';
 import { useSearchParams } from 'next/navigation';
 import { VenueMap, VENUE_ZONES } from '../../../components/map/VenueMap';
 import type { MapZone } from '../../../components/map/VenueMap';
+import { trackEvent } from '../../../lib/analytics';
 
 const LOCATIONS = [
   'Main Entrance', 'North Stand', 'South Stand', 'East Stand (B)', 'West Stand (A)',
@@ -51,7 +50,12 @@ function NavigateContent() {
 
   const swap = () => { setFrom(to); setTo(from); setShowRoute(false); setDuration(null); };
 
-  const handleDuration = useCallback((d: string) => setDuration(d), []);
+  const handleDuration = useCallback((d: string) => {
+    setDuration(d);
+    // Track route calculation in GA4
+    const etaMinutes = parseInt(d.replace(/[^0-9]/g, ''), 10) || 0;
+    trackEvent({ name: 'venueflow_route_calculated', params: { from, to, eta: etaMinutes } });
+  }, [from, to]);
 
   const handleZoneClick = useCallback((zone: MapZone) => {
     setSelectedZone(zone);
@@ -69,8 +73,8 @@ function NavigateContent() {
       <div className="relative mx-4 mt-3 mb-3 rounded-[20px] overflow-hidden" style={{ height: '240px', border: '1px solid rgba(255,255,255,0.08)' }}>
         <VenueMap
           zones={VENUE_ZONES}
-          routeFrom={showRoute ? from : undefined}
-          routeTo={showRoute ? to : undefined}
+          {...(showRoute && from ? { routeFrom: from } : {})}
+          {...(showRoute && to   ? { routeTo: to }     : {})}
           onDuration={handleDuration}
           onZoneClick={handleZoneClick}
           height="240px"

@@ -10,6 +10,16 @@ import { logger } from '../lib/logger';
 // Firestore collection
 const ALERTS_COLLECTION = 'alerts';
 
+// ── Input sanitization ────────────────────────────────────────────────────────
+
+/**
+ * Strips HTML tags and trims whitespace from user-supplied strings.
+ * Prevents XSS if alert content is ever rendered as HTML.
+ */
+function sanitizeText(input: string): string {
+  return input.replace(/<[^>]*>/g, '').trim();
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Alert Service
 // ──────────────────────────────────────────────────────────────────────────────
@@ -37,8 +47,16 @@ export function setAlertSocket(io: SocketIOServer): void {
  */
 export async function createAlert(input: CreateAlertRequest): Promise<Alert> {
   const now = new Date();
-  const alertData: Omit<Alert, 'id'> = {
+
+  // Sanitize user-supplied text fields before persisting
+  const sanitizedInput: CreateAlertRequest = {
     ...input,
+    title: sanitizeText(input.title),
+    body: sanitizeText(input.body),
+  };
+
+  const alertData: Omit<Alert, 'id'> = {
+    ...sanitizedInput,
     createdAt: now,
     expired: false,
   };

@@ -11,7 +11,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['var(--font-space-grotesk)', 'Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
+        sans:    ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         /* Backgrounds — used as bg-vf-bg-base etc. */

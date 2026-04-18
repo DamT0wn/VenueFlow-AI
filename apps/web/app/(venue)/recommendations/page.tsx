@@ -1,8 +1,7 @@
 'use client';
 
-import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Utensils, MapPin, Zap, Clock, ChevronRight, Navigation, Sparkles, DoorOpen } from 'lucide-react';
+import { Star, MapPin, Zap, Clock, ChevronRight, Navigation, Sparkles, DoorOpen, Utensils } from 'lucide-react';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { useRouter } from 'next/navigation';
 

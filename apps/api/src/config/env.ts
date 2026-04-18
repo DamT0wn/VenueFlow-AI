@@ -9,14 +9,14 @@ import { z } from 'zod';
 
 const EnvSchema = z.object({
   // Server
-  /** Express port — defaults to 3001 */
-  PORT: z.coerce.number().int().positive().default(3001),
+  /** Express port — defaults to 8080 (Cloud Run standard) */
+  PORT: z.coerce.number().int().positive().default(8080),
   /** Execution environment */
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
   // Redis
   /** Redis connection URL — provided by Docker Compose or GCP Secret Manager */
-  REDIS_URL: z.string().url().describe('Redis connection URL'),
+  REDIS_URL: z.string().url().optional().default('redis://localhost:6379').describe('Redis connection URL'),
 
   // Firebase
   /**

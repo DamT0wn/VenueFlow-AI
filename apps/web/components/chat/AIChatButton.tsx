@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Loader2, Navigation, Bot } from 'lucide-react';
+import { MessageCircle as _MC, X, Send, Loader2, Navigation, Bot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ export function AIChatButton() {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         text: responseText,
-        action: label && dest ? { label, dest } : undefined,
+        ...(label && dest ? { action: { label, dest } } : {}),
       };
       setMessages(prev => [...prev, aiMsg]);
       setLoading(false);

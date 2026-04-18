@@ -1,16 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Font
-// ──────────────────────────────────────────────────────────────────────────────
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -65,7 +68,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
       <head>
         {/* Preconnect to Google services */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -74,14 +77,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://maps.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="antialiased" style={{ background: 'var(--vf-bg-base)', color: 'var(--vf-text-primary)', fontFamily: 'Inter, system-ui, sans-serif' }}>
-        {/* Skip to main content — accessibility first element */}
+        {/* Skip to main content — must be the very first focusable element */}
         <a
           href="#main-content"
-          className="
-            sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4
-            focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-xl
-            focus:bg-vf-accent-primary focus:text-white focus:font-semibold
-          "
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-xl focus:font-semibold focus:text-white"
+          style={{ background: 'var(--vf-accent-primary)' }}
         >
           Skip to main content
         </a>

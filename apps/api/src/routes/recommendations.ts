@@ -24,13 +24,13 @@ router.get(
   verifyToken,
   validate(QuerySchema, 'query'),
   asyncHandler(async (req, res) => {
-    const { venueId, type, lat, lng } = req.query as z.infer<typeof QuerySchema>;
+    const { venueId, type, lat, lng } = req.query as unknown as z.infer<typeof QuerySchema>;
     const uid = req.user?.uid ?? 'anonymous';
 
     let zones: { lat: number; lng: number; density: number; id: string; name: string; radius: number; updatedAt: Date }[] = [];
     try {
       const snapshot = await getCrowdSnapshot(venueId);
-      zones = snapshot.zones;
+      zones = snapshot.zones as typeof zones;
     } catch {
       logger.warn({ message: 'Recommendations: no crowd snapshot, using defaults', venueId });
     }

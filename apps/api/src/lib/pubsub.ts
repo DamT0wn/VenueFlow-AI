@@ -47,9 +47,9 @@ export async function publishMessage(
     logger.info({ message: 'PubSub: message published', topicName, messageId });
     return messageId;
   } catch (err: unknown) {
-    const error = err as NodeJS.ErrnoException;
+    const error = err as { code?: unknown };
     // If topic doesn't exist in dev/emulator, create it and retry
-    if (error.code === 5 /* NOT_FOUND */ && env.NODE_ENV !== 'production') {
+    if ((error.code === 5 || error.code === '5' || error.code === 'NOT_FOUND') && env.NODE_ENV !== 'production') {
       logger.warn({ message: 'PubSub: topic not found, creating', topicName });
       await client.createTopic(topicName).catch(() => {
         /* may already exist if race condition */
