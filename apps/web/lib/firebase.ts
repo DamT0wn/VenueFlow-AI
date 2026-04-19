@@ -134,8 +134,15 @@ export { getFirebaseApp as firebaseApp };
 export async function getFCMInstance(): Promise<Messaging | null> {
   if (typeof window === 'undefined') return null;
   if (USE_EMULATOR) return null; // FCM not supported in emulator
+  if (typeof navigator === 'undefined') return null;
+  if (!('serviceWorker' in navigator)) return null;
+  if (!('Notification' in window)) return null;
+  if (!('PushManager' in window)) return null;
+
   try {
-    const { getMessaging } = await import('firebase/messaging');
+    const { getMessaging, isSupported } = await import('firebase/messaging');
+    const supported = await isSupported().catch(() => false);
+    if (!supported) return null;
     return getMessaging(getFirebaseApp());
   } catch {
     return null;

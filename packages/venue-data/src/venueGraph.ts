@@ -7,8 +7,6 @@ import type { VenueGraph } from '@venueflow/shared-types';
 // Node types: gate | food | restroom | exit | section | first_aid
 // Layout mirrors a typical oval stadium with 4 stands and concourse level.
 // ──────────────────────────────────────────────────────────────────────────────
-
-/* eslint-disable @typescript-eslint/no-magic-numbers */
 export const VENUE_GRAPH: VenueGraph = {
   venueId: 'venue-stadium-one',
   name: 'Stadium One',

@@ -30,7 +30,6 @@ function gtag(...args: unknown[]): void {
   if (typeof window === 'undefined') return;
   window.dataLayer = window.dataLayer ?? [];
   window.gtag = function gtag() {
-    // eslint-disable-next-line prefer-rest-params
     window.dataLayer.push(arguments);
   };
   window.gtag(...args);
@@ -56,7 +55,6 @@ export function initAnalytics(): void {
   // Initialise dataLayer and gtag function
   window.dataLayer = window.dataLayer ?? [];
   window.gtag = function () {
-    // eslint-disable-next-line prefer-rest-params
     window.dataLayer.push(arguments);
   };
 

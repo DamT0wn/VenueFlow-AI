@@ -258,8 +258,7 @@ export default function MapPage() {
   // Track map load event once
   useEffect(() => {
     trackEvent({ name: 'venueflow_map_loaded', params: { venue_id: venueId } });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [venueId]);
 
   // Derive zones from live snapshot or fall back to seed data
   const zones = useMemo<Zone[]>(() => {
