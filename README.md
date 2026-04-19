@@ -2,8 +2,13 @@
 
 > Real-time intelligent venue companion — crowd heatmaps, smart navigation, queue estimates, and live alerts powered by Firebase, Google Maps, and AI-driven recommendations.
 
-[![CI](https://github.com/your-org/venueflow/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/venueflow/actions/workflows/ci.yml)
-[![Deploy](https://github.com/your-org/venueflow/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-org/venueflow/actions/workflows/deploy.yml)
+[![CI](https://github.com/DamT0wn/VenueFlow-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/DamT0wn/VenueFlow-AI/actions/workflows/ci.yml)
+[![Deploy](https://github.com/DamT0wn/VenueFlow-AI/actions/workflows/deploy.yml/badge.svg)](https://github.com/DamT0wn/VenueFlow-AI/actions/workflows/deploy.yml)
+
+## Live Deployment
+
+- Web: https://venueflow-web-733457865640.asia-south1.run.app
+- API: https://venueflow-api-733457865640.asia-south1.run.app
 
 ---
 
@@ -75,8 +80,8 @@ venueflow/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-org/venueflow.git
-cd venueflow
+git clone https://github.com/DamT0wn/VenueFlow-AI.git
+cd VenueFlow-AI
 npm install
 ```
 
