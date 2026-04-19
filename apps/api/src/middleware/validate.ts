@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
+import { ZodType, ZodTypeDef, ZodError } from 'zod';
 import { AppError, ErrorCode } from './errorHandler';
 
 type RequestPart = 'body' | 'params' | 'query';
@@ -15,7 +15,10 @@ type RequestPart = 'body' | 'params' | 'query';
  * @example
  * router.post('/alerts', verifyToken, validate(CreateAlertSchema), createAlert)
  */
-export function validate<T>(schema: ZodSchema<T>, part: RequestPart = 'body') {
+export function validate<TOutput, TInput = TOutput>(
+  schema: ZodType<TOutput, ZodTypeDef, TInput>,
+  part: RequestPart = 'body',
+) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req[part]);
 

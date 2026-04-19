@@ -6,7 +6,7 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --max-warnings 0",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "type-check": "tsc --noEmit",
     "test": "vitest run --coverage",
     "test:watch": "vitest",

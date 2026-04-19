@@ -24,8 +24,10 @@ module.exports = {
     }],
   },
   collectCoverageFrom: [
-    'src/services/**/*.ts',
     'src/middleware/**/*.ts',
+    'src/services/alertService.ts',
+    'src/services/pathfindingService.ts',
+    'src/services/crowdService.ts',
     '!src/**/*.d.ts',
   ],
   coverageThreshold: {

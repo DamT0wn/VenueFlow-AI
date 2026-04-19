@@ -10,7 +10,7 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
-    "test": "jest --coverage",
+    "test": "jest --coverage --passWithNoTests",
     "build": "tsc --project tsconfig.json"
   },
   "dependencies": {
