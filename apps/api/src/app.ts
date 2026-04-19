@@ -104,7 +104,7 @@ export function createApp(): express.Application {
     }
 
     const status = redisOk && firestoreOk ? 'ok' : 'degraded';
-    res.status(status === 'ok' ? 200 : 503).json({
+    res.status(200).json({
       status,
       uptime: process.uptime(),
       redis: redisOk,

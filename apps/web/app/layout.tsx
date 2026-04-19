@@ -16,6 +16,8 @@ const spaceGrotesk = Space_Grotesk({
   weight: ['400', '500', '600', '700'],
 });
 
+const APP_URL = process.env['NEXT_PUBLIC_APP_URL']?.trim() || 'https://venueflow.app';
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Global Metadata
 // ──────────────────────────────────────────────────────────────────────────────
@@ -48,7 +50,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  metadataBase: new URL(process.env['NEXT_PUBLIC_APP_URL'] ?? 'https://venueflow.app'),
+  metadataBase: new URL(APP_URL),
 };
 
 export const viewport: Viewport = {

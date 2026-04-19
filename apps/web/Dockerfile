@@ -76,12 +76,15 @@ RUN adduser --system --uid 1001 nextjs
 #   .next/standalone/          ← server.js lives here (monorepo root)
 #   .next/standalone/apps/web/ ← app-specific files
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=deps    --chown=nextjs:nodejs /app/node_modules               ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static     ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static     ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public           ./public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public           ./apps/web/public
 
 USER nextjs
 
 EXPOSE 8080
 
-# Next.js standalone server — lives at monorepo root in standalone output
-CMD ["node", "server.js"]
+# Handle both standalone layouts seen in monorepos across Next versions.
+CMD ["sh", "-c", "if [ -f /app/server.js ]; then node /app/server.js; elif [ -f /app/apps/web/server.js ]; then node /app/apps/web/server.js; else echo 'Could not find Next standalone server.js' >&2; ls -la /app; ls -la /app/apps/web || true; exit 1; fi"]

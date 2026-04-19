@@ -17,15 +17,22 @@ import type { Messaging } from 'firebase/messaging';
 // ──────────────────────────────────────────────────────────────────────────────
 
 const USE_EMULATOR = process.env['NEXT_PUBLIC_USE_EMULATOR'] === 'true';
-const measurementId = process.env['NEXT_PUBLIC_GA_MEASUREMENT_ID'];
+const envOrUndefined = (key: string): string | undefined => {
+  const value = process.env[key];
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const measurementId = envOrUndefined('NEXT_PUBLIC_GA_MEASUREMENT_ID');
 
 const firebaseConfig = {
-  apiKey:            process.env['NEXT_PUBLIC_FIREBASE_API_KEY'] ?? 'demo-api-key-for-emulator',
-  authDomain:        process.env['NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'] ?? 'demo-venueflow.firebaseapp.com',
-  projectId:         process.env['NEXT_PUBLIC_FIREBASE_PROJECT_ID'] ?? 'demo-venueflow',
-  storageBucket:     process.env['NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'] ?? '',
-  messagingSenderId: process.env['NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'] ?? '000000000000',
-  appId:             process.env['NEXT_PUBLIC_FIREBASE_APP_ID'] ?? '1:000000000000:web:demo000000000000',
+  apiKey:            envOrUndefined('NEXT_PUBLIC_FIREBASE_API_KEY') ?? 'demo-api-key-for-emulator',
+  authDomain:        envOrUndefined('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN') ?? 'demo-venueflow.firebaseapp.com',
+  projectId:         envOrUndefined('NEXT_PUBLIC_FIREBASE_PROJECT_ID') ?? 'demo-venueflow',
+  storageBucket:     envOrUndefined('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET') ?? '',
+  messagingSenderId: envOrUndefined('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID') ?? '000000000000',
+  appId:             envOrUndefined('NEXT_PUBLIC_FIREBASE_APP_ID') ?? '1:000000000000:web:demo000000000000',
   ...(measurementId ? { measurementId } : {}),
 };
 

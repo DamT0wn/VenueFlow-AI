@@ -45,11 +45,11 @@ USER venueflow
 # Copy compiled JS and ALL node_modules from the monorepo root
 COPY --from=builder --chown=venueflow:nodejs /app/apps/api/dist ./dist
 COPY --from=deps    --chown=venueflow:nodejs /app/node_modules  ./node_modules
-COPY --from=deps    --chown=venueflow:nodejs /app/packages      ./packages
+COPY --from=builder --chown=venueflow:nodejs /app/packages      ./packages
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD node -e "require('http').get('http://localhost:8080/health', r => r.statusCode === 200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(1))"
 
-CMD ["node", "dist/app.js"]
+CMD ["node", "--import", "tsx", "dist/app.js"]
