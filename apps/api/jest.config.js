@@ -28,7 +28,7 @@ module.exports = {
     'src/middleware/**/*.ts',
     '!src/**/*.d.ts',
   ],
-  coverageThresholds: {
+  coverageThreshold: {
     global: { lines: 70, functions: 70, branches: 60 },
   },
 };
