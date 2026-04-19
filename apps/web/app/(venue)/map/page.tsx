@@ -180,11 +180,23 @@ const ZoneCard = memo(function ZoneCard({ zone, onClick }: { zone: Zone; onClick
 
 const ZoneSheet = memo(function ZoneSheet({ zone, onClose }: { zone: Zone; onClose: () => void }) {
   const { color, bg, label } = densityMeta(zone.density);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
   return (
     <motion.div className="fixed inset-0 z-50 flex items-end"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }} onClick={onClose} />
       <motion.div className="relative w-full rounded-t-3xl p-6 pb-10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="zone-sheet-title"
         style={{ background: '#0F1629', border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none' }}
         initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}>
@@ -199,7 +211,7 @@ const ZoneSheet = memo(function ZoneSheet({ zone, onClose }: { zone: Zone; onClo
             <MapPin size={20} style={{ color }} />
           </div>
           <div>
-            <h2 className="text-lg font-bold" style={{ color: '#F1F5F9' }}>{zone.name}</h2>
+            <h2 id="zone-sheet-title" className="text-lg font-bold" style={{ color: '#F1F5F9' }}>{zone.name}</h2>
             <span className="vf-badge" style={{ background: bg, color, border: `1px solid ${color}44`, fontSize: '11px' }}>{label} density</span>
           </div>
         </div>
@@ -442,7 +454,7 @@ export default function MapPage() {
 
       {/* Google Map */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-        className="mb-4 rounded-[20px] overflow-hidden" style={{ height: '200px', border: '1px solid rgba(255,255,255,0.08)' }}>
+        className="mb-4 rounded-[20px] overflow-hidden" style={{ height: '200px', border: '1px solid rgba(255,255,255,0.08)' }} role="region" aria-label="Interactive venue map">
         <VenueMap zones={mapZones} onZoneClick={handleZoneClick} height="200px" zoom={15} />
       </motion.div>
 
@@ -455,6 +467,8 @@ export default function MapPage() {
           ).length;
           return (
             <button key={f.key} onClick={() => handleFilterClick(f.key)}
+              aria-pressed={active}
+              aria-label={`Filter ${f.label} zones (${count})`}
               className="shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all"
               style={{ background: active ? f.color : f.bg, color: active ? '#fff' : f.color, border: `1px solid ${active ? f.color : 'transparent'}` }}>
               {f.label} · {count}

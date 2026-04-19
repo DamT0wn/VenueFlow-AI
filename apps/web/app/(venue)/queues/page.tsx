@@ -84,6 +84,7 @@ export default function QueuesPage() {
             </div>
           </div>
           <button onClick={() => setSort(s => s === 'wait' ? 'density' : 'wait')}
+            aria-label={sort === 'wait' ? 'Sort queues by wait time descending' : 'Sort queues by density descending'}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8' }}>
             <ArrowUpDown size={12} />
@@ -144,6 +145,8 @@ export default function QueuesPage() {
             const cnt = f.key === 'all' ? queues.length : queues.filter(q => q.status === f.key).length;
             return (
               <button key={f.key} onClick={() => setFilter(f.key)}
+                aria-pressed={active}
+                aria-label={`Filter queues by ${f.label}. ${cnt} queues`}
                 className="shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all"
                 style={{ background: active ? f.color : f.bg, color: active ? '#fff' : f.color, border: `1px solid ${active ? f.color : 'transparent'}` }}>
                 {f.label} · {cnt}
@@ -207,6 +210,10 @@ export default function QueuesPage() {
             <p className="text-[14px]" style={{ color: '#475569' }}>No queues match this filter</p>
           </div>
         )}
+
+        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          Average queue wait is {avgWait} minutes. {clearCnt} clear queues available.
+        </div>
       </div>
     </PageContainer>
   );

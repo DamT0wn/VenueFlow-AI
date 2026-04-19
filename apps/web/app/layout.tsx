@@ -56,8 +56,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: '#0A0E1A',
   colorScheme: 'dark',
 };
@@ -82,8 +82,7 @@ export default function RootLayout({
         {/* Skip to main content — must be the very first focusable element */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-xl focus:font-semibold focus:text-white"
-          style={{ background: 'var(--vf-accent-primary)' }}
+          className="vf-skip-link"
         >
           Skip to main content
         </a>

@@ -31,6 +31,29 @@
   --top-bar-height:          60px;
 }
 
+.vf-skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  transform: translateY(-220%);
+  z-index: 9999;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  border: 2px solid #cbd5e1;
+  background: #111827;
+  color: #f8fafc;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.vf-skip-link:focus,
+.vf-skip-link:focus-visible {
+  transform: translateY(0);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.6);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    Keyframes — must be at root level, NOT inside @layer
    ───────────────────────────────────────────────────────────────────────────── */

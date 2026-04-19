@@ -67,7 +67,7 @@ function NavigateContent() {
   };
 
   return (
-    <div className="flex flex-col" style={{ minHeight: '100dvh', paddingTop: 'calc(60px + env(safe-area-inset-top))', paddingBottom: 'calc(68px + env(safe-area-inset-bottom))' }}>
+    <main id="main-content" className="flex flex-col" style={{ minHeight: '100dvh', paddingTop: 'calc(60px + env(safe-area-inset-top))', paddingBottom: 'calc(68px + env(safe-area-inset-bottom))' }}>
 
       {/* ── Live Map ── */}
       <div className="relative mx-4 mt-3 mb-3 rounded-[20px] overflow-hidden" style={{ height: '240px', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -160,6 +160,9 @@ function NavigateContent() {
             <div className="relative flex items-center gap-2">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: '#22C55E', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
               <input
+                id="route-from"
+                aria-label="Route start location"
+                autoComplete="off"
                 className="vf-input flex-1 py-2.5 text-[14px]"
                 placeholder="Your location"
                 value={from}
@@ -220,6 +223,9 @@ function NavigateContent() {
             <div className="relative flex items-center gap-2">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: '#6366F1', boxShadow: '0 0 6px rgba(99,102,241,0.6)' }} />
               <input
+                id="route-to"
+                aria-label="Route destination"
+                autoComplete="off"
                 className="vf-input flex-1 py-2.5 text-[14px]"
                 placeholder="Destination"
                 value={to}
@@ -293,6 +299,10 @@ function NavigateContent() {
           )}
         </AnimatePresence>
 
+          <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+            {showRoute && duration ? `Route from ${from} to ${to}. Estimated time ${duration}.` : 'Set start and destination to find a route.'}
+          </div>
+
         {/* Quick destinations */}
         {!showRoute && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
@@ -325,7 +335,7 @@ function NavigateContent() {
           </motion.div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
 

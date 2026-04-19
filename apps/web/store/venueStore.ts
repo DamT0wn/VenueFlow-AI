@@ -65,6 +65,8 @@ export const useVenueStore = create<VenueState>()(
             venueName: DEFAULT_VENUE_NAME,
             crowdSnapshot: null,
             venueGraph: null,
+            isTextModeEnabled: false,
+            isColourblindModeEnabled: false,
           },
           false,
           'reset',
