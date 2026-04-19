@@ -128,8 +128,8 @@ docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/venueflow/venueflow-api:lates
 docker build -f apps/web/Dockerfile \
   --build-arg NEXT_PUBLIC_API_URL="https://venueflow-api-XXXX-as.a.run.app" \
   --build-arg NEXT_PUBLIC_SOCKET_URL="https://venueflow-api-XXXX-as.a.run.app" \
-  --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="AIza..." \
-  --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="AIza..." \
+  --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="<MAPS_API_KEY>" \
+  --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="<FIREBASE_API_KEY>" \
   --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com" \
   --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id" \
   --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project.firebasestorage.app" \
@@ -211,7 +211,7 @@ gcloud builds triggers create github \
   --repo-owner="your-github-username" \
   --branch-pattern="^main$" \
   --build-config="cloudbuild.yaml" \
-  --substitutions="_REGION=asia-south1,_MAPS_API_KEY=AIza..."
+  --substitutions="_REGION=asia-south1,_MAPS_API_KEY=<MAPS_API_KEY>"
 ```
 
 ---

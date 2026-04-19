@@ -9,7 +9,7 @@
       - --build-arg
       - NEXT_PUBLIC_SOCKET_URL=https://venueflow-api-733457865640.asia-south1.run.app
       - --build-arg
-      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyBiA-pbd3X7IG80Q-8wbLwZZ9D4lTnck_Q
+      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=REPLACE_WITH_MAPS_API_KEY
       - --build-arg
       - NEXT_PUBLIC_FIREBASE_API_KEY=demo-api-key-for-emulator
       - --build-arg
