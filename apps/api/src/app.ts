@@ -15,6 +15,7 @@ import { queuesRouter } from './routes/queues';
 import { alertsRouter } from './routes/alerts';
 import { recommendationsRouter } from './routes/recommendations';
 import { adminRouter } from './routes/admin';
+import { authSmokeRouter } from './routes/authSmoke';
 import { registerCrowdSocket } from './sockets/crowdSocket';
 import { startCrowdSimulator } from './jobs/crowdSimulator';
 
@@ -123,6 +124,7 @@ export function createApp(): express.Application {
   app.use('/api/alerts', alertsRouter);
   app.use('/api/recommendations', recommendationsRouter);
   app.use('/api/admin', adminRouter);
+  app.use('/api/auth', authSmokeRouter);
 
   // ── OpenAPI docs (development only) ──────────────────────────────────────
   if (env.NODE_ENV === 'development') {
