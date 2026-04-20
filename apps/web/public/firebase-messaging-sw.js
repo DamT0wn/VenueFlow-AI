@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-
 // Firebase Cloud Messaging service worker.
 // NOTE: Replace the placeholders with real values for production hosting.
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');

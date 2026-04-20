@@ -8,7 +8,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
 import { SplashScreen } from '../components/layout/SplashScreen';
 import { useUserStore } from '../store/userStore';
-import { saveUserProfile } from '../lib/firebase';
+import { saveUserProfile, initializeFCM } from '../lib/firebase';
 
 const SPLASH_KEY = 'vf_splash_shown';
 const PUBLIC_ROUTES = ['/login', '/auth/login'];
@@ -38,6 +38,9 @@ export default function Providers({ children }: { readonly children: ReactNode }
         } catch (err) {
           console.error('Failed to save user profile:', err);
         }
+
+        // Best effort web push initialization (no-op when unsupported).
+        void initializeFCM();
 
         // Show splash if first time and not in public route
         const shown = sessionStorage.getItem(SPLASH_KEY);

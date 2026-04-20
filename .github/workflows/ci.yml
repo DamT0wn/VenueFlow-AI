@@ -120,10 +120,18 @@ jobs:
           sleep 15
       - name: Build and Start App
         env:
+          E2E_BASE_URL: http://127.0.0.1:3000
+          E2E_API_URL: http://127.0.0.1:3001
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
+          NEXT_PUBLIC_SOCKET_URL: http://127.0.0.1:3001
+          NEXT_PUBLIC_USE_EMULATOR: 'true'
+          NEXT_PUBLIC_FIREBASE_API_KEY: demo-api-key-for-emulator
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: demo-venueflow.firebaseapp.com
           NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: demo-venueflow
-          NEXT_PUBLIC_USE_EMULATOR: 'true'
-          NEXT_PUBLIC_API_URL: http://localhost:3001
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: demo-venueflow.appspot.com
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '000000000000'
+          NEXT_PUBLIC_FIREBASE_APP_ID: 1:000000000000:web:demo000000000000
         run: |
           cd apps/api && npm run build && npm start &
           cd apps/web && npm run build && npm start &
@@ -139,6 +147,9 @@ jobs:
           fi
       - name: Run Playwright Tests
         if: steps.has-e2e.outputs.found == 'true'
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3000
+          E2E_API_URL: http://127.0.0.1:3001
         run: npx playwright test
       - name: Skip E2E (no tests present)
         if: steps.has-e2e.outputs.found != 'true'
@@ -166,4 +177,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run Axe Accessibility Tests
         if: hashFiles('apps/web/e2e/**/*.spec.ts') != ''
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3000
+          E2E_API_URL: http://127.0.0.1:3001
         run: npx playwright test --grep="@a11y"

@@ -195,6 +195,57 @@ export async function registerFCMServiceWorker(): Promise<ServiceWorkerRegistrat
   }
 }
 
+export interface FCMSetupResult {
+  enabled: boolean;
+  token: string | null;
+  reason?: string;
+}
+
+/**
+ * Full FCM bootstrap for web:
+ * 1) Register service worker
+ * 2) Request notification permission
+ * 3) Fetch registration token with VAPID key
+ */
+export async function initializeFCM(): Promise<FCMSetupResult> {
+  if (typeof window === 'undefined') return { enabled: false, token: null, reason: 'ssr' };
+  if (USE_EMULATOR) return { enabled: false, token: null, reason: 'emulator' };
+
+  const vapidKey = envOrUndefined('NEXT_PUBLIC_FIREBASE_VAPID_KEY');
+  if (!vapidKey) return { enabled: false, token: null, reason: 'missing_vapid_key' };
+
+  const registration = await registerFCMServiceWorker();
+  if (!registration) return { enabled: false, token: null, reason: 'service_worker_unavailable' };
+
+  if (typeof Notification === 'undefined') {
+    return { enabled: false, token: null, reason: 'notifications_unsupported' };
+  }
+
+  let permission = Notification.permission;
+  if (permission === 'default') {
+    permission = await Notification.requestPermission();
+  }
+
+  if (permission !== 'granted') {
+    return { enabled: false, token: null, reason: `permission_${permission}` };
+  }
+
+  const messaging = await getFCMInstance();
+  if (!messaging) return { enabled: false, token: null, reason: 'messaging_unsupported' };
+
+  try {
+    const { getToken } = await import('firebase/messaging');
+    const token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
+
+    return { enabled: true, token: token || null };
+  } catch {
+    return { enabled: false, token: null, reason: 'token_error' };
+  }
+}
+
 // ── Analytics ─────────────────────────────────────────────────────────────────
 
 let _analytics: Analytics | null = null;

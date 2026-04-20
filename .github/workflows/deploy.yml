@@ -67,6 +67,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    outputs:
+      service-url: ${{ steps.cloudrun.outputs.url }}
     steps:
       - uses: google-github-actions/auth@v2
         with:
@@ -74,6 +76,7 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Deploy to Cloud Run
+        id: cloudrun
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ env.SERVICE_NAME }}
@@ -119,8 +122,8 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           NEXT_PUBLIC_FIREBASE_VAPID_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_VAPID_KEY }}
           NEXT_PUBLIC_GA_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_GA_MEASUREMENT_ID }}
-          NEXT_PUBLIC_API_URL: https://${{ env.SERVICE_NAME }}-hash-uc.a.run.app
-          NEXT_PUBLIC_SOCKET_URL: https://${{ env.SERVICE_NAME }}-hash-uc.a.run.app
+          NEXT_PUBLIC_API_URL: ${{ needs.deploy-api.outputs.service-url }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ needs.deploy-api.outputs.service-url }}
           NEXT_PUBLIC_APP_URL: https://venueflow.app
         run: cd apps/web && npm run build
 

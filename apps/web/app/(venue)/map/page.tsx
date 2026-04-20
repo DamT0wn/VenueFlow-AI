@@ -481,7 +481,9 @@ export default function MapPage() {
       <div className="grid grid-cols-2 gap-3">
         <AnimatePresence mode="popLayout">
           {filtered.map(zone => (
-            <ZoneCard key={zone.id} zone={zone} onClick={setSelected} />
+            <motion.div key={zone.id} layout>
+              <ZoneCard zone={zone} onClick={setSelected} />
+            </motion.div>
           ))}
         </AnimatePresence>
       </div>
