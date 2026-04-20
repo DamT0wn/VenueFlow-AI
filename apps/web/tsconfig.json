@@ -22,6 +22,7 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
+      "@/*": ["./*"],
       "@web/*": ["./*"],
       "@shared/*": ["../../packages/shared-types/src/*"]
     }

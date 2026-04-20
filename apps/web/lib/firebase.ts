@@ -3,12 +3,19 @@ import {
   getAuth,
   connectAuthEmulator,
   signInAnonymously,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
   type Auth,
   type User,
 } from 'firebase/auth';
 import {
   getFirestore,
   connectFirestoreEmulator,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
   type Firestore,
 } from 'firebase/firestore';
 import type { Analytics } from 'firebase/analytics';
@@ -188,4 +195,83 @@ export async function getFirebaseAnalytics(): Promise<Analytics | null> {
   } catch {
     return null;
   }
+}
+
+// ── Google Sign-In ────────────────────────────────────────────────────────────
+
+/**
+ * Signs in user with Google via OAuth popup.
+ * Returns the signed-in user.
+ */
+export async function signInWithGoogle(): Promise<User> {
+  const auth = getFirebaseAuth();
+  const provider = new GoogleAuthProvider();
+  provider.addScope('profile');
+  provider.addScope('email');
+  
+  const result = await signInWithPopup(auth, provider);
+  return result.user;
+}
+
+/**
+ * Signs out the current user.
+ */
+export async function signOutUser(): Promise<void> {
+  const auth = getFirebaseAuth();
+  await signOut(auth);
+}
+
+// ── Firestore User Management ─────────────────────────────────────────────────
+
+/**
+ * User profile data structure.
+ */
+export interface UserProfile {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  role: 'user' | 'admin';
+  createdAt: number;
+  lastSignIn: number;
+  preferences?: {
+    theme?: 'light' | 'dark';
+    notifications?: boolean;
+    analyticsConsent?: boolean;
+  };
+}
+
+/**
+ * Saves or updates a user profile in Firestore.
+ */
+export async function saveUserProfile(user: User): Promise<UserProfile> {
+  const firestore = getFirebaseFirestore();
+  
+  const userRef = doc(collection(firestore, 'users'), user.uid);
+  const existingDoc = await getDoc(userRef);
+  
+  const profile: UserProfile = {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    photoURL: user.photoURL,
+    role: 'user',
+    createdAt: existingDoc.exists() ? (existingDoc.data() as UserProfile).createdAt : Date.now(),
+    lastSignIn: Date.now(),
+  };
+  
+  await setDoc(userRef, profile, { merge: true });
+  return profile;
+}
+
+/**
+ * Retrieves a user profile from Firestore.
+ */
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const firestore = getFirebaseFirestore();
+  const userRef = doc(collection(firestore, 'users'), uid);
+  const docSnap = await getDoc(userRef);
+  
+  if (!docSnap.exists()) return null;
+  return docSnap.data() as UserProfile;
 }

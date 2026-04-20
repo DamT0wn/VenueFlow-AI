@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Auth completely removed — app opens directly with no login required.
+// Middleware for route protection — handled by Providers component
 export function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
-  // Redirect root, /login, and /auth paths straight to the map
-  if (
-    pathname === '/' ||
-    pathname === '/login' ||
-    pathname.startsWith('/login')
-  ) {
+  // Redirect root to map (user will be redirected to login by Providers if not authenticated)
+  if (pathname === '/') {
     return NextResponse.redirect(new URL('/map', request.url));
   }
 
@@ -22,3 +18,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|icons/|manifest.webmanifest).*)',
   ],
 };
+
