@@ -32,20 +32,18 @@ export function getFirebaseAdmin(): admin.app.App {
         projectId: env.FIREBASE_PROJECT_ID,
       });
     } else {
-      // Cloud Run — use Application Default Credentials
+      // Cloud Run / local ADC mode
       app = admin.initializeApp({
         credential: admin.credential.applicationDefault(),
         projectId: env.FIREBASE_PROJECT_ID,
       });
     }
   } catch (err) {
-    // Fallback: init without credentials (auth is bypassed anyway)
-    logger.warn({ message: 'Firebase Admin: credential init failed, using no-auth mode', error: (err as Error).message });
-    if (!admin.apps.length) {
-      app = admin.initializeApp({ projectId: env.FIREBASE_PROJECT_ID });
-    } else {
-      app = admin.app();
-    }
+    logger.error({
+      message: 'Firebase Admin: credential initialization failed',
+      error: (err as Error).message,
+    });
+    throw new Error('Firebase Admin initialization failed');
   }
 
   return app;

@@ -7,7 +7,7 @@ import type { CrowdSnapshot } from '@venueflow/shared-types';
 
 /**
  * Central socket hook — manages one shared connection for the whole app.
- * Auth is disabled so we connect immediately on mount.
+ * Uses Firebase-authenticated socket connections.
  */
 export function useVenueSocket() {
   const venueId          = useVenueStore(s => s.venueId);

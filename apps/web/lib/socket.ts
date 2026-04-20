@@ -1,6 +1,6 @@
 import { io, type Socket } from 'socket.io-client';
+import { ensureAnonymousAuth, getIdToken } from './firebase';
 
-// Auth disabled — connect without a token
 let socket: Socket | null = null;
 
 const SOCKET_URL =
@@ -14,7 +14,15 @@ export function getSocket(): Socket {
   socket = io(SOCKET_URL, {
     autoConnect: false,
     transports: ['websocket', 'polling'],
-    auth: { token: 'dev-bypass' },   // bypasses server auth check in dev
+    auth: async (cb) => {
+      try {
+        await ensureAnonymousAuth();
+        const token = await getIdToken();
+        cb({ token });
+      } catch {
+        cb({});
+      }
+    },
     reconnection: true,
     reconnectionAttempts: 10,
     reconnectionDelay: 1_000,

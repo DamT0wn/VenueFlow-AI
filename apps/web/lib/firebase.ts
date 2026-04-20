@@ -2,7 +2,9 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import {
   getAuth,
   connectAuthEmulator,
+  signInAnonymously,
   type Auth,
+  type User,
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -69,6 +71,26 @@ function getFirebaseAuth(): Auth {
   }
 
   return _auth;
+}
+
+/**
+ * Ensures a Firebase anonymous user session exists.
+ * Returns the active user (existing or newly created).
+ */
+export async function ensureAnonymousAuth(): Promise<User> {
+  const auth = getFirebaseAuth();
+  if (auth.currentUser) return auth.currentUser;
+  const credential = await signInAnonymously(auth);
+  return credential.user;
+}
+
+/**
+ * Gets the current Firebase ID token, refreshing it if needed.
+ */
+export async function getIdToken(): Promise<string | null> {
+  const auth = getFirebaseAuth();
+  if (!auth.currentUser) return null;
+  return auth.currentUser.getIdToken();
 }
 
 // ── Firestore ─────────────────────────────────────────────────────────────────

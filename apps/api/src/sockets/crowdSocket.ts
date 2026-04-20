@@ -29,11 +29,8 @@ export function registerCrowdSocket(io: SocketIOServer): void {
     const handshakeAuth = socket.handshake.auth as SocketHandshakeAuth;
     const token = handshakeAuth.token;
 
-    // ── Auth bypass — login removed for hackathon demo ────────────────────
-    // Accept dev-bypass token in all environments, or skip auth entirely
-    if (!token || token === 'dev-bypass') {
-      socket.data = { uid: 'guest-user', role: 'user', venueId: undefined };
-      next();
+    if (!token || typeof token !== 'string') {
+      next(new Error('Authentication required'));
       return;
     }
 

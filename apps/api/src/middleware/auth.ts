@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AppError, ErrorCode } from './errorHandler';
 import { logger } from '../lib/logger';
+import { auth } from '../lib/firebaseAdmin';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Augment Express Request type
@@ -24,16 +25,42 @@ declare global {
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
- * Auth completely bypassed — login removed for hackathon demo.
- * verifyToken is a no-op passthrough; req.user is set to a guest identity.
+ * Verifies Firebase ID token from Authorization header.
+ * Requires `Authorization: Bearer <idToken>`.
  */
 export async function verifyToken(
   req: Request,
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
-  req.user = { uid: 'guest', role: 'user' };
-  next();
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    next(new AppError('Missing or malformed Authorization header', 401, ErrorCode.UNAUTHORIZED));
+    return;
+  }
+
+  const token = authHeader.slice('Bearer '.length).trim();
+  if (!token) {
+    next(new AppError('Missing authentication token', 401, ErrorCode.UNAUTHORIZED));
+    return;
+  }
+
+  try {
+    const decoded = await auth().verifyIdToken(token);
+    req.user = {
+      uid: decoded.uid,
+      ...(decoded.email ? { email: decoded.email } : {}),
+      role: typeof decoded['role'] === 'string' ? decoded['role'] : 'user',
+      ...(typeof decoded['venueId'] === 'string' ? { venueId: decoded['venueId'] } : {}),
+    };
+    next();
+  } catch (err) {
+    logger.warn({
+      message: 'Auth: token verification failed',
+      error: (err as Error).message,
+    });
+    next(new AppError('Invalid or expired token', 401, ErrorCode.UNAUTHORIZED));
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -83,11 +110,38 @@ export function requireRole(role: string) {
 // Optional auth — attaches user if token present, does not block if absent
 // ──────────────────────────────────────────────────────────────────────────────
 
-/** No-op optional auth — login removed for hackathon demo. */
+/**
+ * Optional auth — attaches req.user when a valid token is provided,
+ * but continues unauthenticated if header is absent.
+ */
 export async function optionalAuth(
-  _req: Request,
+  req: Request,
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    next();
+    return;
+  }
+
+  const token = authHeader.slice('Bearer '.length).trim();
+  if (!token) {
+    next();
+    return;
+  }
+
+  try {
+    const decoded = await auth().verifyIdToken(token);
+    req.user = {
+      uid: decoded.uid,
+      ...(decoded.email ? { email: decoded.email } : {}),
+      role: typeof decoded['role'] === 'string' ? decoded['role'] : 'user',
+      ...(typeof decoded['venueId'] === 'string' ? { venueId: decoded['venueId'] } : {}),
+    };
+  } catch {
+    // Intentionally swallow token errors for optional auth paths.
+  }
+
   next();
 }
