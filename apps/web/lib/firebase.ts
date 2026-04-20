@@ -178,6 +178,23 @@ export async function getFCMInstance(): Promise<Messaging | null> {
   }
 }
 
+/**
+ * Registers the FCM service worker required for background notifications.
+ * Returns null if unsupported, disabled for emulator, or registration fails.
+ */
+export async function registerFCMServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  if (typeof window === 'undefined') return null;
+  if (USE_EMULATOR) return null;
+  if (!('serviceWorker' in navigator)) return null;
+
+  try {
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    return registration;
+  } catch {
+    return null;
+  }
+}
+
 // ── Analytics ─────────────────────────────────────────────────────────────────
 
 let _analytics: Analytics | null = null;
