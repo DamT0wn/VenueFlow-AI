@@ -117,7 +117,7 @@ git push origin main
 - ✅ Response format validation
 - ✅ Type checking for zone fields
 
-**GET /api/health**
+**GET /health**
 - ✅ Returns 200 with status (always healthy for demo)
 - ✅ Includes timestamp for monitoring
 - ✅ Reports service dependency status

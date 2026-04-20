@@ -109,6 +109,11 @@ PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='get(projectNumbe
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
+
+# Firestore access for /health checks (reads one lightweight document)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --role="roles/datastore.user"
 ```
 
 ### 6. Build and push API image
@@ -143,6 +148,29 @@ docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/venueflow/venueflow-web:lates
 ```
 
 ### 8. Deploy API
+
+Use one of the two commands below based on your Redis type.
+
+For Cloud Memorystore (private IP):
+
+```bash
+gcloud run deploy venueflow-api \
+  --image=${REGION}-docker.pkg.dev/${PROJECT_ID}/venueflow/venueflow-api:latest \
+  --region=$REGION \
+  --platform=managed \
+  --allow-unauthenticated \
+  --port=8080 \
+  --memory=512Mi \
+  --cpu=1 \
+  --min-instances=0 \
+  --max-instances=10 \
+  --vpc-connector=venueflow-connector \
+  --vpc-egress=private-ranges-only \
+  --set-env-vars="NODE_ENV=production,FIREBASE_PROJECT_ID=${PROJECT_ID}" \
+  --set-secrets="REDIS_URL=venueflow-redis-url:latest"
+```
+
+For Upstash/public Redis:
 
 ```bash
 gcloud run deploy venueflow-api \
@@ -232,6 +260,23 @@ gcloud run services update venueflow-api \
   --vpc-connector=venueflow-connector \
   --vpc-egress=private-ranges-only
 ```
+
+If you use Upstash or another public Redis endpoint, skip VPC connector flags.
+
+---
+
+## Health-check verification
+
+After deploy, confirm both dependencies are healthy:
+
+```bash
+curl -s "$API_URL/health" | jq
+```
+
+Expected payload:
+- `status: "ok"`
+- `redis: true`
+- `firestore: true`
 
 ---
 

@@ -47,7 +47,7 @@ Post-pandemic, venues are getting BUSY. Ticketmaster, Eventbrite — they're all
 **The Demo 🎬**
 🔗 **Live**: https://venueflow-web-733457865640.asia-south1.run.app
 🔗 **Code**: https://github.com/DamT0wn/VenueFlow-AI
-🔗 **API**: https://venueflow-api-733457865640.asia-south1.run.app/api/health
+🔗 **API**: https://venueflow-api-733457865640.asia-south1.run.app/health
 
 Try it now: Log in, pick a venue (Chinnaswamy Stadium 🏏), and watch live crowd updates in the heatmap — no staging, real Cloud Run deployment.
 

@@ -75,6 +75,7 @@ echo "  B) Upstash Redis (free tier, no VPC needed):"
 echo "     https://upstash.com → Create database → Copy Redis URL"
 echo ""
 read -rp "Enter your Redis URL (redis://HOST:PORT or rediss://HOST:PORT): " REDIS_URL
+read -rp "Serverless VPC connector (required for Memorystore private IP, press Enter to skip): " VPC_CONNECTOR
 
 if [[ -z "${REDIS_URL}" ]]; then
   warn "No Redis URL provided — using in-memory only (crowd data won't persist across restarts)"
@@ -146,6 +147,18 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --role="roles/secretmanager.secretAccessor" \
   --quiet
 
+# Grant Cloud Run runtime service account Firestore read access for /health
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --role="roles/datastore.user" \
+  --quiet
+
+API_DEPLOY_FLAGS=()
+if [[ -n "${VPC_CONNECTOR}" ]]; then
+  API_DEPLOY_FLAGS+=("--vpc-connector=${VPC_CONNECTOR}")
+  API_DEPLOY_FLAGS+=("--vpc-egress=private-ranges-only")
+fi
+
 # Deploy API
 gcloud run deploy "${API_SERVICE}" \
   --image="${API_IMAGE}" \
@@ -161,6 +174,7 @@ gcloud run deploy "${API_SERVICE}" \
   --timeout=60 \
   --set-env-vars="NODE_ENV=production,FIREBASE_PROJECT_ID=${FB_PROJECT_ID:-demo-venueflow},PUBSUB_PROJECT_ID=${FB_PROJECT_ID:-demo-venueflow}" \
   --set-secrets="REDIS_URL=venueflow-redis-url:latest" \
+  "${API_DEPLOY_FLAGS[@]}" \
   --quiet
 
 API_URL=$(gcloud run services describe "${API_SERVICE}" \
