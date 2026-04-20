@@ -33,7 +33,7 @@ export async function verifyToken(
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers?.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     next(new AppError('Missing or malformed Authorization header', 401, ErrorCode.UNAUTHORIZED));
     return;
@@ -119,7 +119,7 @@ export async function optionalAuth(
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers?.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     next();
     return;

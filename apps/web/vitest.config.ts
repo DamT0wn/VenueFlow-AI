@@ -2,6 +2,18 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+const ciTestOptions = process.env.CI
+  ? {
+      fileParallelism: false,
+      poolOptions: {
+        threads: {
+          minThreads: 1,
+          maxThreads: 1,
+        },
+      },
+    }
+  : {};
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -9,6 +21,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/__tests__/**/*.test.{ts,tsx}'],
+    ...ciTestOptions,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

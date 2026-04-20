@@ -17,9 +17,11 @@ export function db() {
   return mockFirestore;
 }
 
+export const mockVerifyIdToken = jest.fn().mockResolvedValue({ uid: 'test-user' });
+
 export function auth() {
   return {
-    verifyIdToken: jest.fn().mockResolvedValue({ uid: 'test-user' }),
+    verifyIdToken: mockVerifyIdToken,
   };
 }
 
