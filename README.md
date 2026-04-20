@@ -1,6 +1,6 @@
-# VenueFlow AI 🏟️
+# VenueFlow AI
 
-> Real-time intelligent venue companion — crowd heatmaps, smart navigation, queue estimates, and live alerts powered by Firebase, Google Maps, and AI-driven recommendations.
+> Real-time venue companion prototype with crowd heatmaps, navigation, queue estimates, and alerts powered by Firebase, Google Maps, and Socket.io.
 
 [![CI](https://github.com/DamT0wn/VenueFlow-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/DamT0wn/VenueFlow-AI/actions/workflows/ci.yml)
 [![Deploy](https://github.com/DamT0wn/VenueFlow-AI/actions/workflows/deploy.yml/badge.svg)](https://github.com/DamT0wn/VenueFlow-AI/actions/workflows/deploy.yml)
@@ -9,6 +9,7 @@
 
 - Web: https://venueflow-web-733457865640.asia-south1.run.app
 - API: https://venueflow-api-733457865640.asia-south1.run.app
+- Health: https://venueflow-api-733457865640.asia-south1.run.app/health
 
 ---
 
@@ -17,7 +18,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        CLIENT (Mobile PWA)                      │
-│  Next.js 14 · React 18 · Tailwind · Framer Motion              │
+│  Next.js 16 · React 18 · Tailwind · Framer Motion              │
 │  Google Maps API · Firebase SDK · Socket.io-client              │
 └──────────────────────────┬──────────────────────────────────────┘
                            │  HTTPS / WebSocket
@@ -195,7 +196,7 @@ cd apps/api
 npx jest --coverage
 ```
 
-Coverage threshold: **80% statements** on all service files.
+Coverage threshold: **70% lines / 70% functions / 60% branches** (global in Jest config).
 
 ### Frontend Component Tests (Vitest + RTL)
 ```bash
@@ -246,6 +247,20 @@ Push to `main` → GitHub Actions runs `deploy.yml`:
 3. Build Next.js → deploy to Firebase Hosting
 4. Deploy Firestore rules and indexes
 5. Run smoke tests against production URL
+
+See also:
+- `DEPLOY.md` for manual Cloud Run deployment and health troubleshooting
+- `TEST_EVIDENCE.md` for the latest test evidence snapshot and commands
+- `SECURITY.md` for implemented controls and current security limits
+
+---
+
+## Current Scope and Limits
+
+- Demo-first behavior is still present in parts of the web app (some pages may use seeded/mock data).
+- The health endpoint reports dependency status for both Redis and Firestore; a degraded status means one or both dependencies are unreachable.
+- Backend auth and role checks are implemented, but deployment configuration still determines real production behavior.
+- Venue data is currently centered on static seed data (`venue-stadium-one`) for simulator-driven flows.
 
 ---
 

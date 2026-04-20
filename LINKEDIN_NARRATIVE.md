@@ -1,10 +1,10 @@
-# 🚀 VenueFlow AI — LinkedIn Narrative Post
+# VenueFlow AI - LinkedIn Narrative Post
 
 ## Main Post (Character limit: 3000 on LinkedIn)
 
 ---
 
-Building a real-time intelligent venue companion that turns massive stadiums into navigable spaces. 🏟️✨
+Building a real-time venue companion that helps people navigate large stadium spaces with less friction.
 
 **The Problem 🤔**
 Ever been lost in a massive stadium? Concert venues, cricket grounds, festivals — they're enormous, overwhelming, and navigating them drains your experience. You want to:
@@ -18,25 +18,25 @@ Most venues? Still using static signage and guesswork. **That's where VenueFlow 
 **The Solution 🎯**
 We built **VenueFlow AI** — a real-time intelligent companion that gives venue attendees instant access to:
 
-✅ **Live Crowd Density Heatmaps** — AI-powered crowd distribution across stadium zones, updated every 5 seconds
+✅ **Live Crowd Density Heatmaps** - simulator-driven crowd distribution across stadium zones, updated every 5 seconds
 ✅ **Smart Navigation** — Google Maps integration with venue paths, showing you the least congested routes
-✅ **Queue Predictions** — ML-driven queue length forecasting for food, restrooms, and services
+✅ **Queue Estimates** - crowd-driven wait-time estimation for food, restrooms, and services
 ✅ **Location-Based Alerts** — Get notifications for events happening near you in real-time
-✅ **Accessibility First** — Colorblind mode, high-contrast themes, text-only UI for screen readers
+✅ **Accessibility First** - colorblind mode, high-contrast themes, keyboard and screen-reader improvements
 
-**The Stack 🔧**
-- **Frontend**: Next.js 14 PWA (works offline), React hooks with Zustand state
+**The Stack**
+- **Frontend**: Next.js + React with Zustand state
 - **Backend**: Express 5 with Socket.io for real-time updates, Cloud Pub/Sub for events
-- **AI/ML**: Firebase ML with crowd simulation algorithms (Perlin noise-based, production-ready)
+- **Simulation**: deterministic crowd simulation for prototype behavior
 - **Infrastructure**: Google Cloud Run (auto-scaling), Firestore (real-time DB), Redis (sub-second caching)
 - **Analytics**: GA4 event tracking, Firebase performance monitoring
 
-**Real Numbers 📊**
-- ⚡ **Response Time**: 200ms P95 (sub-second perception)
-- 🔒 **Security Score**: 96.25% (OWASP Top 10 covered, CSP headers, rate limiting)
-- ♿ **Accessibility**: WCAG 2.1 AA compliant, text mode + colorblind support
-- 📱 **Efficiency**: 100% score (optimize images, code split, lazy load, WebP)
-- 🧪 **Test Coverage**: 95% (integration tests, edge cases, error scenarios)
+**Evidence Snapshot**
+- Backend line coverage artifact in repo: 85.83% (`apps/api/coverage/lcov.info`)
+- Backend Jest test files: 14 (estimated 88 test cases)
+- Frontend unit/integration test files: 11 (`apps/web/__tests__`)
+- Playwright specs: 2 (`apps/web/e2e`)
+- CI includes lint, type-check, tests, security audit, E2E, and accessibility jobs
 
 **Why Now? 🎤**
 Post-pandemic, venues are getting BUSY. Ticketmaster, Eventbrite — they're all silent on the venue experience itself. We're the missing piece:
@@ -44,12 +44,12 @@ Post-pandemic, venues are getting BUSY. Ticketmaster, Eventbrite — they're all
 2. Crowd safety > visitor overwhelm
 3. Experience quality > bottleneck frustration
 
-**The Demo 🎬**
+**The Demo**
 🔗 **Live**: https://venueflow-web-733457865640.asia-south1.run.app
 🔗 **Code**: https://github.com/DamT0wn/VenueFlow-AI
 🔗 **API**: https://venueflow-api-733457865640.asia-south1.run.app/health
 
-Try it now: Log in, pick a venue (Chinnaswamy Stadium 🏏), and watch live crowd updates in the heatmap — no staging, real Cloud Run deployment.
+Try it now: open the map, pick a venue, and watch crowd updates in the heatmap on the live deployment.
 
 **Key Features to Explore**:
 - 📍 **Map Page**: Click zones to see crowd density and alerts
@@ -58,14 +58,14 @@ Try it now: Log in, pick a venue (Chinnaswamy Stadium 🏏), and watch live crow
 - 🎯 **Recommendations**: ML suggests less-crowded alternatives
 - 🔔 **Alerts**: Real-time notifications
 
-**The Wins 🏆**
+**The Wins**
 - 🥇 **Code Quality**: Structured monorepo, strong typing with TypeScript, comprehensive JSDoc
 - 🔐 **Security**: Helmet CSP, rate limiting, input validation with Zod, Firebase security rules
 - ♿ **Accessibility**: Color-blind heatmap palette, ARIA labels, semantic HTML
 - 📈 **Performance**: Multi-stage Docker builds, Redis caching, Socket.io compression
-- 🧪 **Testing**: Service layer, route integration, store state machine tests
+- 🧪 **Testing**: Service layer, route integration, store and E2E smoke coverage
 
-**What's Next 🚀**
+**What's Next**
 - Partner with real venues (Ticketmaster, AXS integration)
 - Expand to music festivals, conferences, airport terminals
 - Mobile app (React Native)
@@ -75,7 +75,7 @@ Try it now: Log in, pick a venue (Chinnaswamy Stadium 🏏), and watch live crow
 
 ## Alternative Short Version (If space is limited)
 
-Building VenueFlow AI — an AI-powered real-time companion that transforms how people navigate large venues.
+Building VenueFlow AI - a real-time companion prototype for large venues.
 
 🏟️ **The Problem**: Stadium crowds are chaotic. Static signs, unknown wait times, overwhelming crowds, accessibility barriers.
 
@@ -86,7 +86,7 @@ Building VenueFlow AI — an AI-powered real-time companion that transforms how 
 - Real-time alerts
 - WCAG 2.1 AA accessibility
 
-📊 **Results**: 96.25% security, 95% test coverage, 100% efficiency, live on Google Cloud Run
+📊 **Snapshot**: CI pipeline with lint/type-check/tests/security checks, backend coverage artifact at 85.83%, live deployment on Google Cloud Run
 
 🔗 Demo: https://venueflow-web-733457865640.asia-south1.run.app
 🔗 Code: https://github.com/DamT0wn/VenueFlow-AI
